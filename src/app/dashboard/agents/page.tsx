@@ -1,0 +1,201 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getUser } from "@/lib/auth";
+import api from "@/lib/api";
+
+export default function AgentsPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [agents, setAgents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState<string | null>(null);
+  const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const u = getUser();
+    if (u && u.role !== "admin" && u.role !== "super_admin") { router.push("/dashboard"); return; }
+    setUser(u);
+    fetchAgents();
+  }, []);
+
+  async function fetchAgents() {
+    try {
+      setLoading(true);
+      const res = await api.get("/users");
+      setAgents(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function updateStatus(id: string, status: string) {
+    setUpdating(id);
+    try {
+      await api.patch("/users/" + id + "/status", { status });
+      fetchAgents();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setUpdating(null);
+    }
+  }
+
+  const statusColors: any = {
+    active: { bg: "rgba(52,211,153,0.15)", color: "#34d399", label: "Active" },
+    pending: { bg: "rgba(251,191,36,0.15)", color: "#fbbf24", label: "Pending" },
+    suspended: { bg: "rgba(239,68,68,0.15)", color: "#ef4444", label: "Suspended" },
+  };
+
+  const roleColors: any = {
+    admin: { bg: "rgba(96,165,250,0.15)", color: "#60a5fa" },
+    super_admin: { bg: "rgba(167,139,250,0.15)", color: "#a78bfa" },
+    agent: { bg: "rgba(156,163,175,0.15)", color: "#9ca3af" },
+  };
+
+  const filtered = agents.filter(a => {
+    const matchesFilter = filter === "all" || a.status === filter;
+    const matchesSearch = search === "" ||
+      a.firstName?.toLowerCase().includes(search.toLowerCase()) ||
+      a.lastName?.toLowerCase().includes(search.toLowerCase()) ||
+      a.email?.toLowerCase().includes(search.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  const counts = {
+    all: agents.length,
+    active: agents.filter(a => a.status === "active").length,
+    pending: agents.filter(a => a.status === "pending").length,
+    suspended: agents.filter(a => a.status === "suspended").length,
+  };
+
+  return (
+    <>
+      <header style={{ background: "#111827", borderBottom: "1px solid #1f2937", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+          <div>
+            <h2 style={{ color: "white", fontWeight: "600", fontSize: "15px", margin: 0 }}>Agent Management</h2>
+            <p style={{ color: "#6b7280", fontSize: "11px", margin: "2px 0 0" }}>{agents.length} total users registered</p>
+          </div>
+          <div style={{ display: "flex", gap: "8px" }}>
+            {counts.pending > 0 && (
+              <div style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)", color: "#fbbf24", borderRadius: "8px", padding: "8px 14px", fontSize: "12px", fontWeight: "600" }}>
+                {counts.pending} pending approval
+              </div>
+            )}
+            <button onClick={fetchAgents} style={{ background: "#1f2937", border: "1px solid #374151", color: "#9ca3af", borderRadius: "8px", padding: "8px 14px", fontSize: "12px", cursor: "pointer" }}>Refresh</button>
+          </div>
+        </header>
+
+        <div style={{ padding: "16px 24px", background: "#0f172a", borderBottom: "1px solid #1f2937", display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or email..." style={{ flex: 1, minWidth: "200px", background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px", padding: "8px 14px", fontSize: "13px", outline: "none" }} />
+          <div style={{ display: "flex", gap: "6px" }}>
+            {[
+              { key: "all", label: "All" },
+              { key: "pending", label: "Pending" },
+              { key: "active", label: "Active" },
+              { key: "suspended", label: "Suspended" },
+            ].map(f => (
+              <button key={f.key} onClick={() => setFilter(f.key)} style={{ background: filter === f.key ? "#2563eb" : "#1f2937", border: "1px solid " + (filter === f.key ? "#2563eb" : "#374151"), color: filter === f.key ? "white" : "#9ca3af", borderRadius: "6px", padding: "6px 14px", fontSize: "12px", cursor: "pointer", fontWeight: filter === f.key ? "600" : "400" }}>
+                {f.label} ({counts[f.key as keyof typeof counts]})
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <main style={{ flex: 1, overflow: "auto", padding: "24px" }}>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "60px", color: "#6b7280" }}>Loading agents...</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "60px" }}>
+              <p style={{ color: "#4b5563", fontSize: "14px", margin: "0 0 6px" }}>No agents found</p>
+              <p style={{ color: "#374151", fontSize: "12px", margin: 0 }}>Agents will appear here once they register</p>
+            </div>
+          ) : (
+            <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: "16px", overflow: "hidden" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #1f2937" }}>
+                    {["Agent", "Email", "Role", "Status", "Joined", "Actions"].map(h => (
+                      <th key={h} style={{ padding: "12px 16px", textAlign: "left", color: "#6b7280", fontSize: "11px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((agent, i) => (
+                    <tr key={agent.id} style={{ borderBottom: i < filtered.length - 1 ? "1px solid #1f2937" : "none", transition: "background 0.1s" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "#1f2937")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <td style={{ padding: "14px 16px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: agent.role === "admin" ? "#2563eb" : "#374151", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "12px", fontWeight: "bold", flexShrink: 0 }}>
+                            {agent.firstName?.[0]}{agent.lastName?.[0]}
+                          </div>
+                          <div>
+                            <p style={{ color: "white", fontSize: "13px", fontWeight: "500", margin: 0 }}>{agent.firstName} {agent.lastName}</p>
+                            <p style={{ color: "#6b7280", fontSize: "11px", margin: "2px 0 0" }}>{agent.phone || "No phone"}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: "14px 16px", color: "#60a5fa", fontSize: "13px" }}>{agent.email}</td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <span style={{ background: roleColors[agent.role]?.bg || "#1f2937", color: roleColors[agent.role]?.color || "#9ca3af", fontSize: "11px", fontWeight: "600", padding: "3px 10px", borderRadius: "6px", textTransform: "capitalize" }}>
+                          {agent.role?.replace("_", " ")}
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <span style={{ background: statusColors[agent.status]?.bg || "#1f2937", color: statusColors[agent.status]?.color || "#9ca3af", fontSize: "11px", fontWeight: "600", padding: "3px 10px", borderRadius: "6px" }}>
+                          {statusColors[agent.status]?.label || agent.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px 16px", color: "#6b7280", fontSize: "12px" }}>
+                        {new Date(agent.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          {agent.status === "pending" && (
+                            <button
+                              onClick={() => updateStatus(agent.id, "active")}
+                              disabled={updating === agent.id}
+                              style={{ background: "rgba(52,211,153,0.15)", border: "1px solid rgba(52,211,153,0.3)", color: "#34d399", borderRadius: "6px", padding: "5px 12px", fontSize: "11px", fontWeight: "600", cursor: "pointer" }}
+                            >
+                              {updating === agent.id ? "..." : "Approve"}
+                            </button>
+                          )}
+                          {agent.status === "active" && agent.id !== user?.id && (
+                            <button
+                              onClick={() => updateStatus(agent.id, "suspended")}
+                              disabled={updating === agent.id}
+                              style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", borderRadius: "6px", padding: "5px 12px", fontSize: "11px", fontWeight: "600", cursor: "pointer" }}
+                            >
+                              {updating === agent.id ? "..." : "Suspend"}
+                            </button>
+                          )}
+                          {agent.status === "suspended" && (
+                            <button
+                              onClick={() => updateStatus(agent.id, "active")}
+                              disabled={updating === agent.id}
+                              style={{ background: "rgba(96,165,250,0.15)", border: "1px solid rgba(96,165,250,0.3)", color: "#60a5fa", borderRadius: "6px", padding: "5px 12px", fontSize: "11px", fontWeight: "600", cursor: "pointer" }}
+                            >
+                              {updating === agent.id ? "..." : "Reactivate"}
+                            </button>
+                          )}
+                          {agent.id === user?.id && (
+                            <span style={{ color: "#374151", fontSize: "11px", fontStyle: "italic" }}>You</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </main>
+    </>
+  );
+}
+

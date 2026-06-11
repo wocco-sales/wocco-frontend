@@ -1,12 +1,10 @@
-﻿"use client";
+"use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isAuthenticated, getUser } from "@/lib/auth";
 import api from "@/lib/api";
 
 export default function LeadsPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -14,8 +12,6 @@ export default function LeadsPage() {
   const [sourceFilter, setSourceFilter] = useState("");
 
   useEffect(() => {
-    if (!isAuthenticated()) { router.push("/login"); return; }
-    setUser(getUser());
     fetchLeads();
   }, []);
 
@@ -72,31 +68,8 @@ export default function LeadsPage() {
   }
 
   return (
-    <div style={{ background: "#030712", minHeight: "100vh", display: "flex" }}>
-      <aside style={{ width: "240px", background: "#111827", borderRight: "1px solid #1f2937", display: "flex", flexDirection: "column", flexShrink: 0 }}>
-        <div style={{ padding: "24px", borderBottom: "1px solid #1f2937" }}>
-          <h1 style={{ color: "#60a5fa", fontWeight: "900", fontSize: "24px", margin: 0 }}>WOCCO</h1>
-          <p style={{ color: "#4b5563", fontSize: "11px", margin: "2px 0 0" }}>Sales Lead Platform</p>
-        </div>
-        <nav style={{ flex: 1, padding: "16px" }}>
-          {[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Leads", href: "/dashboard/leads" },
-            { label: "Heat Map", href: "/dashboard/map" },
-            ...((user?.role === "admin" || user?.role === "super_admin") ? [
-              { label: "Agents", href: "/dashboard/agents" },
-              { label: "Analytics", href: "/dashboard/analytics" },
-            ] : []),
-          ].map((item) => (
-            <a key={item.href} href={item.href} style={{ display: "flex", alignItems: "center", padding: "10px 12px", borderRadius: "8px", color: item.href === "/dashboard/leads" ? "#fff" : "#9ca3af", textDecoration: "none", fontSize: "13px", marginBottom: "2px", background: item.href === "/dashboard/leads" ? "#1f2937" : "transparent" }}>
-              {item.label}
-            </a>
-          ))}
-        </nav>
-      </aside>
-
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <header style={{ background: "#111827", borderBottom: "1px solid #1f2937", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+    <>
+      <header style={{ background: "#111827", borderBottom: "1px solid #1f2937", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <div>
             <h2 style={{ color: "white", fontWeight: "600", fontSize: "15px", margin: 0 }}>Leads</h2>
             <p style={{ color: "#6b7280", fontSize: "11px", margin: "2px 0 0" }}>{leads.length} total leads in database</p>
@@ -107,12 +80,7 @@ export default function LeadsPage() {
         </header>
 
         <div style={{ padding: "16px 24px", background: "#0f172a", borderBottom: "1px solid #1f2937", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, phone, state..."
-            style={{ flex: 1, minWidth: "200px", background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px", padding: "8px 14px", fontSize: "13px", outline: "none" }}
-          />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, phone, state..." style={{ flex: 1, minWidth: "200px", background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px", padding: "8px 14px", fontSize: "13px", outline: "none" }} />
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px", padding: "8px 14px", fontSize: "13px", outline: "none" }}>
             <option value="">All Statuses</option>
             <option value="new">New</option>
@@ -159,7 +127,7 @@ export default function LeadsPage() {
                       onMouseEnter={(e) => (e.currentTarget.style.background = "#1f2937")}
                       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                     >
-                      <td style={{ padding: "14px 16px" }}>
+                      <td style={{ padding: "14px 16px", cursor: "pointer" }} onClick={() => router.push("/dashboard/leads/" + lead.id)}>
                         <p style={{ color: "white", fontSize: "13px", fontWeight: "500", margin: 0 }}>{lead.firstName || lead.title} {lead.lastName || ""}</p>
                         <p style={{ color: "#6b7280", fontSize: "11px", margin: "2px 0 0" }}>{lead.title}</p>
                       </td>
@@ -179,11 +147,7 @@ export default function LeadsPage() {
                         </span>
                       </td>
                       <td style={{ padding: "14px 16px" }}>
-                        <select
-                          value={lead.status}
-                          onChange={(e) => updateStatus(lead.id, e.target.value)}
-                          style={{ background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "6px", padding: "4px 8px", fontSize: "11px", outline: "none", cursor: "pointer" }}
-                        >
+                        <select value={lead.status} onChange={(e) => updateStatus(lead.id, e.target.value)} style={{ background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "6px", padding: "4px 8px", fontSize: "11px", outline: "none", cursor: "pointer" }}>
                           <option value="new">New</option>
                           <option value="called">Called</option>
                           <option value="interested">Interested</option>
@@ -201,7 +165,8 @@ export default function LeadsPage() {
             </div>
           )}
         </main>
-      </div>
-    </div>
+    </>
   );
 }
+
+

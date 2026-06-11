@@ -83,20 +83,7 @@ export default function ImportPage() {
   }
 
   return (
-    <div style={{ background: "#030712", minHeight: "100vh", display: "flex" }}>
-      <aside style={{ width: "240px", background: "#111827", borderRight: "1px solid #1f2937", flexShrink: 0 }}>
-        <div style={{ padding: "24px", borderBottom: "1px solid #1f2937" }}>
-          <h1 style={{ color: "#60a5fa", fontWeight: "900", fontSize: "24px", margin: 0 }}>WOCCO</h1>
-          <p style={{ color: "#4b5563", fontSize: "11px", margin: "2px 0 0" }}>Sales Lead Platform</p>
-        </div>
-        <nav style={{ padding: "16px" }}>
-          {[{label:"Dashboard",href:"/dashboard"},{label:"Leads",href:"/dashboard/leads"},{label:"Heat Map",href:"/dashboard/map"}].map(item => (
-            <a key={item.href} href={item.href} style={{ display: "block", padding: "10px 12px", borderRadius: "8px", color: "#9ca3af", textDecoration: "none", fontSize: "13px", marginBottom: "2px" }}>{item.label}</a>
-          ))}
-        </nav>
-      </aside>
-
-      <div style={{ flex: 1, overflow: "auto", padding: "32px" }}>
+    <div style={{ flex: 1, overflow: "auto", padding: "32px" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
             <button onClick={() => router.push("/dashboard/leads")} style={{ background: "#1f2937", border: "1px solid #374151", color: "#9ca3af", borderRadius: "8px", padding: "6px 12px", fontSize: "12px", cursor: "pointer" }}>← Back</button>
@@ -175,7 +162,6 @@ export default function ImportPage() {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 }

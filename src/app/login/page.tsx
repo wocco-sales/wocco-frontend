@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login, saveAuth } from "@/lib/auth";
@@ -27,78 +27,72 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-950 via-blue-900 to-gray-950 flex-col items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-blue-400 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-600 rounded-full blur-3xl"></div>
-        </div>
-        <div className="relative z-10 text-center">
-          <h1 className="text-6xl font-black text-white mb-4 tracking-tight">WOCCO</h1>
-          <p className="text-blue-300 text-lg font-medium mb-2">World Class Cleaning</p>
-          <p className="text-blue-400 text-sm">Sales Lead Generation Platform</p>
-          <div className="mt-16 grid grid-cols-2 gap-4 text-left">
+    <div style={{ minHeight: "100vh", display: "flex" }}>
+      <div style={{ flex: 1, background: "linear-gradient(135deg, #1e3a8a, #1e40af, #1d4ed8)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "10%", left: "10%", width: "300px", height: "300px", background: "rgba(255,255,255,0.03)", borderRadius: "50%" }} />
+        <div style={{ position: "absolute", bottom: "10%", right: "10%", width: "400px", height: "400px", background: "rgba(255,255,255,0.03)", borderRadius: "50%" }} />
+        <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
+          <h1 style={{ color: "white", fontWeight: "900", fontSize: "64px", margin: "0 0 8px", letterSpacing: "-2px" }}>WOCCO</h1>
+          <p style={{ color: "rgba(255,255,255,0.7)", fontWeight: "500", fontSize: "16px", margin: "0 0 4px" }}>World Class Cleaning</p>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px", margin: "0 0 48px" }}>Sales Lead Generation Platform</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", maxWidth: "320px" }}>
             {[
               { label: "Lead Sources", value: "6+" },
               { label: "US States", value: "50" },
               { label: "Categories", value: "45" },
               { label: "Agents", value: "Active" },
             ].map((s) => (
-              <div key={s.label} className="bg-white/5 border border-white/10 rounded-xl p-4">
-                <p className="text-blue-300 text-xs mb-1">{s.label}</p>
-                <p className="text-white font-bold text-xl">{s.value}</p>
+              <div key={s.label} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "12px", padding: "16px" }}>
+                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "11px", margin: "0 0 4px" }}>{s.label}</p>
+                <p style={{ color: "white", fontWeight: "800", fontSize: "20px", margin: 0 }}>{s.value}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="w-full lg:w-1/2 bg-gray-950 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <div className="lg:hidden text-center mb-8">
-            <h1 className="text-4xl font-black text-blue-400">WOCCO</h1>
-            <p className="text-gray-500 text-sm mt-1">Sales Lead Platform</p>
-          </div>
-
-          <div className="mb-8">
-            <h2 className="text-white text-3xl font-bold mb-2">Welcome back</h2>
-            <p className="text-gray-400">Sign in to your account to continue</p>
+      <div style={{ width: "480px", background: "#030712", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 40px", flexShrink: 0 }}>
+        <div style={{ width: "100%" }}>
+          <div style={{ marginBottom: "32px" }}>
+            <h2 style={{ color: "white", fontWeight: "700", fontSize: "28px", margin: "0 0 8px" }}>Welcome back</h2>
+            <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>Sign in to your account to continue</p>
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl px-4 py-3 mb-6 flex items-center gap-2">
-              <span>&#9888;</span> {error}
+            <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", borderRadius: "10px", padding: "12px 16px", marginBottom: "20px", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>⚠</span> {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div>
-              <label className="block text-gray-300 text-sm font-medium mb-2">Email address</label>
+              <label style={{ color: "#9ca3af", fontSize: "13px", fontWeight: "500", display: "block", marginBottom: "8px" }}>Email address</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder-gray-600"
+                className="w-full"
+                style={{ width: "100%", background: "#111827", border: "1px solid #1f2937", color: "white", borderRadius: "10px", padding: "12px 16px", fontSize: "14px", outline: "none", boxSizing: "border-box" }}
                 placeholder="you@wocco.com"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-gray-300 text-sm font-medium mb-2">Password</label>
-              <div className="relative">
+              <label style={{ color: "#9ca3af", fontSize: "13px", fontWeight: "500", display: "block", marginBottom: "8px" }}>Password</label>
+              <div style={{ position: "relative" }}>
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-3.5 pr-14 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder-gray-600"
+                  style={{ width: "100%", background: "#111827", border: "1px solid #1f2937", color: "white", borderRadius: "10px", padding: "12px 56px 12px 16px", fontSize: "14px", outline: "none", boxSizing: "border-box" }}
                   placeholder="Enter your password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs font-medium transition-colors"
+                  style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#6b7280", cursor: "pointer", fontSize: "11px", fontWeight: "600" }}
                 >
                   {showPassword ? "HIDE" : "SHOW"}
                 </button>
@@ -108,19 +102,19 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-semibold rounded-xl px-4 py-3.5 text-sm transition-all duration-200 flex items-center justify-center gap-2 mt-2"
+              style={{ background: loading ? "#1e40af" : "#2563eb", color: "white", border: "none", borderRadius: "10px", padding: "14px", fontSize: "14px", fontWeight: "700", cursor: loading ? "not-allowed" : "pointer", marginTop: "4px" }}
             >
-              {loading ? (
-                <span>Signing in...</span>
-              ) : (
-                <span>Sign In to Dashboard</span>
-              )}
+              {loading ? "Signing in..." : "Sign In to Dashboard"}
             </button>
           </form>
 
-          <p className="text-center text-gray-600 text-xs mt-8">
-            WOCCO Sales Lead Platform &copy; 2026 &mdash; Confidential
-          </p>
+          <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid #1f2937", textAlign: "center" }}>
+            <p style={{ color: "#6b7280", fontSize: "13px", margin: "0 0 8px" }}>
+              New agent?{" "}
+              <a href="/register" style={{ color: "#60a5fa", textDecoration: "none", fontWeight: "600" }}>Create an account</a>
+            </p>
+            <p style={{ color: "#374151", fontSize: "11px", margin: 0 }}>WOCCO Sales Lead Platform © 2026 — Confidential</p>
+          </div>
         </div>
       </div>
     </div>
