@@ -8,6 +8,7 @@ export default function AnalyticsPage() {
   const router = useRouter();
   const [stats, setStats] = useState<any>({ total: 0, newToday: 0, called: 0, closedWon: 0, interested: 0, byStatus: [], bySource: [], byState: [] });
   const [agents, setAgents] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,9 +17,11 @@ export default function AnalyticsPage() {
     Promise.all([
       api.get("/leads/stats"),
       api.get("/users"),
-    ]).then(([statsRes, agentsRes]) => {
+      api.get("/leads/leaderboard"),
+    ]).then(([statsRes, agentsRes, leaderboardRes]) => {
       setStats(statsRes.data);
       setAgents(agentsRes.data.filter((a: any) => a.role === "agent"));
+      setLeaderboard(leaderboardRes.data);
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
@@ -48,7 +51,7 @@ export default function AnalyticsPage() {
             <h2 style={{ color: "white", fontWeight: "600", fontSize: "15px", margin: 0 }}>Analytics</h2>
             <p style={{ color: "#6b7280", fontSize: "11px", margin: "2px 0 0" }}>Lead pipeline performance overview</p>
           </div>
-          <button onClick={() => { setLoading(true); api.get("/leads/stats").then(r => setStats(r.data)).finally(() => setLoading(false)); }} style={{ background: "#1f2937", border: "1px solid #374151", color: "#9ca3af", borderRadius: "8px", padding: "8px 14px", fontSize: "12px", cursor: "pointer" }}>Refresh</button>
+          <button onClick={() => { setLoading(true); Promise.all([api.get("/leads/stats"), api.get("/leads/leaderboard")]).then(([s, l]) => { setStats(s.data); setLeaderboard(l.data); }).finally(() => setLoading(false)); }} style={{ background: "#1f2937", border: "1px solid #374151", color: "#9ca3af", borderRadius: "8px", padding: "8px 14px", fontSize: "12px", cursor: "pointer" }}>Refresh</button>
         </header>
 
         <main style={{ flex: 1, overflow: "auto", padding: "24px" }}>
@@ -74,6 +77,52 @@ export default function AnalyticsPage() {
                     </p>
                   </div>
                 ))}
+              </div>
+
+              <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: "16px", padding: "24px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                  <h3 style={{ color: "white", fontWeight: "600", fontSize: "14px", margin: 0 }}>Agent Leaderboard</h3>
+                  <span style={{ color: "#4b5563", fontSize: "11px" }}>Ranked by leads closed, then conversion rate</span>
+                </div>
+                {leaderboard.length === 0 ? (
+                  <p style={{ color: "#4b5563", fontSize: "13px", margin: 0 }}>No agent activity yet — leaderboard fills in once leads are assigned and worked</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 110px 110px 110px 140px", gap: "8px", padding: "0 12px 10px", borderBottom: "1px solid #1f2937" }}>
+                      {["#", "Agent", "Assigned", "Calls Made", "Closed", "Conversion"].map((h, i) => (
+                        <span key={h} style={{ color: "#6b7280", fontSize: "11px", fontWeight: "600", textTransform: "uppercase", textAlign: i >= 2 ? "right" : "left" }}>{h}</span>
+                      ))}
+                    </div>
+                    {leaderboard.map((a: any, i: number) => {
+                      const rankColors = ["#fbbf24", "#9ca3af", "#b45309"];
+                      const rankColor = rankColors[i] || "#4b5563";
+                      const maxConv = Math.max(...leaderboard.map((x: any) => x.conversionRate), 1);
+                      return (
+                        <div key={a.agentId} style={{ display: "grid", gridTemplateColumns: "44px 1fr 110px 110px 110px 140px", gap: "8px", alignItems: "center", padding: "12px", borderBottom: "1px solid #161e2e", background: i === 0 ? "rgba(251,191,36,0.04)" : "transparent", borderRadius: i === 0 ? "10px" : 0 }}>
+                          <span style={{ color: rankColor, fontSize: "13px", fontWeight: "800" }}>{i + 1}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                            <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: i === 0 ? "rgba(251,191,36,0.15)" : "#374151", color: i === 0 ? "#fbbf24" : "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: "bold", flexShrink: 0 }}>
+                              {a.firstName?.[0]}{a.lastName?.[0]}
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <p style={{ color: "white", fontSize: "12px", fontWeight: "600", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.firstName} {a.lastName}</p>
+                              <p style={{ color: "#6b7280", fontSize: "10px", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.email}</p>
+                            </div>
+                          </div>
+                          <span style={{ color: "#9ca3af", fontSize: "12px", fontWeight: "600", textAlign: "right" }}>{a.assigned}</span>
+                          <span style={{ color: "#fbbf24", fontSize: "12px", fontWeight: "700", textAlign: "right" }}>{a.callsMade}</span>
+                          <span style={{ color: "#10b981", fontSize: "12px", fontWeight: "700", textAlign: "right" }}>{a.closedWon}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "flex-end" }}>
+                            <div style={{ width: "60px", height: "5px", background: "#1f2937", borderRadius: "3px", overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: (a.conversionRate / maxConv * 100) + "%", background: "#34d399", borderRadius: "3px" }} />
+                            </div>
+                            <span style={{ color: "#34d399", fontSize: "12px", fontWeight: "700", width: "44px", textAlign: "right" }}>{a.conversionRate}%</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>

@@ -13,7 +13,7 @@ export default function LeadsPage() {
 
   useEffect(() => {
     fetchLeads();
-  }, []);
+  }, [statusFilter, sourceFilter]);
 
   async function fetchLeads() {
     try {
@@ -29,8 +29,6 @@ export default function LeadsPage() {
       setLoading(false);
     }
   }
-
-  useEffect(() => { fetchLeads(); }, [statusFilter, sourceFilter]);
 
   const filtered = leads.filter((l) =>
     search === "" ||
@@ -61,7 +59,7 @@ export default function LeadsPage() {
   async function updateStatus(id: string, status: string) {
     try {
       await api.patch("/leads/" + id + "/status", { status });
-      fetchLeads();
+      setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
     } catch (e) {
       console.error(e);
     }

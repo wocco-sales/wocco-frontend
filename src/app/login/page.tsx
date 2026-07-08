@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login, saveAuth } from "@/lib/auth";
+import Logo from "@/components/Logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,7 +33,9 @@ export default function LoginPage() {
         <div style={{ position: "absolute", top: "10%", left: "10%", width: "300px", height: "300px", background: "rgba(255,255,255,0.03)", borderRadius: "50%" }} />
         <div style={{ position: "absolute", bottom: "10%", right: "10%", width: "400px", height: "400px", background: "rgba(255,255,255,0.03)", borderRadius: "50%" }} />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
-          <h1 style={{ color: "white", fontWeight: "900", fontSize: "64px", margin: "0 0 8px", letterSpacing: "-2px" }}>WOCCO</h1>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+            <Logo size={120} />
+          </div>
           <p style={{ color: "rgba(255,255,255,0.7)", fontWeight: "500", fontSize: "16px", margin: "0 0 4px" }}>World Class Cleaning</p>
           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px", margin: "0 0 48px" }}>Sales Lead Generation Platform</p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", maxWidth: "320px" }}>

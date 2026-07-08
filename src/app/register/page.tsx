@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
+import Logo from "@/components/Logo";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -71,7 +72,9 @@ export default function RegisterPage() {
       <div style={{ flex: 1, background: "#030712", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 24px" }}>
         <div style={{ width: "100%", maxWidth: "460px" }}>
           <div style={{ textAlign: "center", marginBottom: "32px" }}>
-            <h1 style={{ color: "#60a5fa", fontWeight: "900", fontSize: "36px", margin: "0 0 6px" }}>WOCCO</h1>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "8px" }}>
+              <Logo size={72} />
+            </div>
             <p style={{ color: "#4b5563", fontSize: "13px", margin: 0 }}>Sales Lead Platform</p>
           </div>
 

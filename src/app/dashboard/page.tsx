@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { getUser } from "@/lib/auth";
 import api from "@/lib/api";
 
@@ -116,14 +117,14 @@ export default function DashboardPage() {
                 <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: "16px", padding: "24px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                     <h3 style={{ color: "white", fontWeight: "600", fontSize: "13px", margin: 0 }}>Recent Leads</h3>
-                    <a href="/dashboard/leads" style={{ color: "#60a5fa", fontSize: "12px", textDecoration: "none" }}>View all {stats.total} leads</a>
+                    <Link href="/dashboard/leads" style={{ color: "#60a5fa", fontSize: "12px", textDecoration: "none" }}>View all {stats.total} leads</Link>
                   </div>
                   <div style={{ textAlign: "center", padding: "32px 0" }}>
                     <p style={{ color: "#4b5563", fontSize: "13px", margin: "0 0 4px" }}>{stats.total === 0 ? "No leads yet" : stats.total + " leads in pipeline"}</p>
                     <p style={{ color: "#374151", fontSize: "11px", margin: "0 0 16px" }}>{stats.total === 0 ? "Import leads or run a scrape to get started" : "Click View all to manage your leads"}</p>
-                    <a href="/dashboard/leads" style={{ background: "#2563eb", color: "white", borderRadius: "8px", padding: "8px 20px", fontSize: "12px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>
+                    <Link href="/dashboard/leads" style={{ background: "#2563eb", color: "white", borderRadius: "8px", padding: "8px 20px", fontSize: "12px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>
                       {stats.total === 0 ? "Import Leads" : "View Leads"}
-                    </a>
+                    </Link>
                   </div>
                 </div>
 
@@ -136,13 +137,13 @@ export default function DashboardPage() {
                       { label: "View Heat Map", desc: "Lead density", color: "#a78bfa", href: "/dashboard/map" },
                       { label: "Manage Agents", desc: "Approve accounts", color: "#fbbf24", href: "/dashboard/agents" },
                     ].map((a) => (
-                      <a key={a.label} href={a.href} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.03)", cursor: "pointer", textDecoration: "none" }}>
+                      <Link key={a.label} href={a.href} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.03)", cursor: "pointer", textDecoration: "none" }}>
                         <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: a.color, flexShrink: 0 }}></div>
                         <div>
                           <p style={{ color: "white", fontSize: "12px", fontWeight: "500", margin: 0 }}>{a.label}</p>
                           <p style={{ color: "#6b7280", fontSize: "11px", margin: 0 }}>{a.desc}</p>
                         </div>
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 </div>

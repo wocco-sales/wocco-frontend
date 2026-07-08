@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getUser, logout } from "@/lib/auth";
+import Logo from "@/components/Logo";
 
 const BASE_LINKS = [
   { label: "Dashboard", href: "/dashboard" },
@@ -12,6 +14,7 @@ const BASE_LINKS = [
 const ADMIN_LINKS = [
   { label: "Agents", href: "/dashboard/agents" },
   { label: "Analytics", href: "/dashboard/analytics" },
+  { label: "Scraper", href: "/dashboard/scrape" },
 ];
 
 export default function Sidebar() {
@@ -32,16 +35,16 @@ export default function Sidebar() {
 
   return (
     <aside style={{ width: "240px", background: "#111827", borderRight: "1px solid #1f2937", display: "flex", flexDirection: "column", flexShrink: 0 }}>
-      <div style={{ padding: "24px", borderBottom: "1px solid #1f2937" }}>
-        <h1 style={{ color: "#60a5fa", fontWeight: "900", fontSize: "24px", margin: 0 }}>WOCCO</h1>
-        <p style={{ color: "#4b5563", fontSize: "11px", margin: "2px 0 0" }}>Sales Lead Platform</p>
+      <div style={{ padding: "20px 24px", borderBottom: "1px solid #1f2937" }}>
+        <Logo size={36} showText subtitle="Sales Lead Platform" />
       </div>
 
       <nav style={{ flex: 1, padding: "16px" }}>
         {links.map((item) => (
-          <a
+          <Link
             key={item.href}
             href={item.href}
+            prefetch
             style={{
               display: "flex",
               alignItems: "center",
@@ -55,7 +58,7 @@ export default function Sidebar() {
             }}
           >
             {item.label}
-          </a>
+          </Link>
         ))}
       </nav>
 
