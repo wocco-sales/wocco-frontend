@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import Logo from "@/components/Logo";
 
 export default function RegisterPage() {
@@ -37,8 +38,8 @@ export default function RegisterPage() {
         password: form.password,
       });
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Registration failed. Please try again.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Registration failed. Please try again."));
     } finally {
       setLoading(false);
     }

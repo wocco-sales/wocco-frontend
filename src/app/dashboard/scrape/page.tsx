@@ -3,8 +3,23 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import api from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 
-const STATUS_COLORS: any = {
+type ScrapeStatus = "READY" | "RUNNING" | "SUCCEEDED" | "FAILED" | "TIMED-OUT" | "ABORTED";
+
+interface ScrapeRun {
+  runId: string;
+  status: ScrapeStatus;
+  source?: string;
+}
+
+interface ImportResult {
+  imported: number;
+  scraped: number;
+  skipped: number;
+}
+
+const STATUS_COLORS: Record<string, string> = {
   READY: "#60a5fa",
   RUNNING: "#fbbf24",
   SUCCEEDED: "#34d399",
@@ -20,30 +35,32 @@ export default function ScrapePage() {
   const [location, setLocation] = useState("");
   const [maxResults, setMaxResults] = useState(50);
 
-  const [run, setRun] = useState<any>(null);
-  const [importResult, setImportResult] = useState<any>(null);
+  const [run, setRun] = useState<ScrapeRun | null>(null);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false);
   const [importing, setImporting] = useState(false);
-  const pollRef = useRef<any>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const u = getUser();
     if (u && u.role !== "admin" && u.role !== "super_admin") router.push("/dashboard");
-    return () => clearInterval(pollRef.current);
-  }, []);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [router]);
 
   function startPolling(runId: string) {
-    clearInterval(pollRef.current);
+    if (pollRef.current) clearInterval(pollRef.current);
     pollRef.current = setInterval(async () => {
       try {
         const res = await api.get(`/scraper/runs/${runId}`);
-        setRun((prev: any) => ({ ...prev, ...res.data }));
+        setRun((prev) => (prev ? { ...prev, ...res.data } : res.data));
         if (["SUCCEEDED", "FAILED", "TIMED-OUT", "ABORTED"].includes(res.data.status)) {
-          clearInterval(pollRef.current);
+          if (pollRef.current) clearInterval(pollRef.current);
         }
       } catch {
-        clearInterval(pollRef.current);
+        if (pollRef.current) clearInterval(pollRef.current);
       }
     }, 5000);
   }
@@ -57,8 +74,8 @@ export default function ScrapePage() {
       const res = await api.post("/scraper/run", { source, query, location, maxResults });
       setRun(res.data);
       startPolling(res.data.runId);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to start scrape");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to start scrape"));
     } finally {
       setStarting(false);
     }
@@ -71,14 +88,14 @@ export default function ScrapePage() {
     try {
       const res = await api.post(`/scraper/runs/${run.runId}/import`, { source: run.source || source });
       setImportResult(res.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Import failed");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Import failed"));
     } finally {
       setImporting(false);
     }
   }
 
-  const statusColor = STATUS_COLORS[run?.status] || "#9ca3af";
+  const statusColor = (run?.status ? STATUS_COLORS[run.status] : undefined) || "#9ca3af";
   const inputStyle = { width: "100%", background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px", padding: "10px 12px", fontSize: "13px", outline: "none", boxSizing: "border-box" as const };
   const labelStyle = { color: "#9ca3af", fontSize: "12px", fontWeight: "600" as const, display: "block", marginBottom: "6px" };
 

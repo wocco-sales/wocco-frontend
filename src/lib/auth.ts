@@ -1,14 +1,16 @@
 import api from './api';
 
+export interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+}
+
 export interface LoginResponse {
   access_token: string;
-  user: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    role: string;
-  };
+  user: User;
 }
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
@@ -21,7 +23,7 @@ export function saveAuth(data: LoginResponse) {
   localStorage.setItem('user', JSON.stringify(data.user));
 }
 
-export function getUser() {
+export function getUser(): User | null {
   if (typeof window === 'undefined') return null;
   const user = localStorage.getItem('user');
   return user ? JSON.parse(user) : null;

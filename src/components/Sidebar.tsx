@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { getUser, logout } from "@/lib/auth";
+import { getUser, logout, type User } from "@/lib/auth";
 import Logo from "@/components/Logo";
 
 const BASE_LINKS = [
@@ -19,7 +19,7 @@ const ADMIN_LINKS = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     setUser(getUser());

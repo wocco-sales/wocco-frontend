@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login, saveAuth } from "@/lib/auth";
+import { getErrorMessage } from "@/lib/errors";
 import Logo from "@/components/Logo";
 
 export default function LoginPage() {
@@ -20,8 +21,8 @@ export default function LoginPage() {
       const data = await login(email, password);
       saveAuth(data);
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Invalid credentials");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Invalid credentials"));
     } finally {
       setLoading(false);
     }
