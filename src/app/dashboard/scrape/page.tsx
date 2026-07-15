@@ -44,7 +44,10 @@ export default function ScrapePage() {
 
   useEffect(() => {
     const u = getUser();
-    if (u && u.role !== "admin" && u.role !== "super_admin") router.push("/dashboard");
+    if (!u) {
+      router.push("/login");
+      return;
+    }
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };

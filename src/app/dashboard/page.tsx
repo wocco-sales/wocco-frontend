@@ -132,10 +132,13 @@ export default function DashboardPage() {
                   <h3 style={{ color: "white", fontWeight: "600", fontSize: "13px", margin: "0 0 16px" }}>Quick Actions</h3>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     {[
+                      { label: "Run Scraper", desc: "Find new leads", color: "#f59e0b", href: "/dashboard/scrape" },
                       { label: "Import CSV", desc: "Upload lead list", color: "#60a5fa", href: "/dashboard/leads/import" },
                       { label: "View All Leads", desc: stats.total + " total", color: "#34d399", href: "/dashboard/leads" },
                       { label: "View Heat Map", desc: "Lead density", color: "#a78bfa", href: "/dashboard/map" },
-                      { label: "Manage Agents", desc: "Approve accounts", color: "#fbbf24", href: "/dashboard/agents" },
+                      ...(user?.role === "admin" || user?.role === "super_admin"
+                        ? [{ label: "Manage Agents", desc: "Approve accounts", color: "#fbbf24", href: "/dashboard/agents" }]
+                        : []),
                     ].map((a) => (
                       <Link key={a.label} href={a.href} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.03)", cursor: "pointer", textDecoration: "none" }}>
                         <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: a.color, flexShrink: 0 }}></div>

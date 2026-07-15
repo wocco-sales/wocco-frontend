@@ -9,12 +9,12 @@ const BASE_LINKS = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Leads", href: "/dashboard/leads" },
   { label: "Heat Map", href: "/dashboard/map" },
+  { label: "Scraper", href: "/dashboard/scrape" },
 ];
 
 const ADMIN_LINKS = [
   { label: "Agents", href: "/dashboard/agents" },
   { label: "Analytics", href: "/dashboard/analytics" },
-  { label: "Scraper", href: "/dashboard/scrape" },
 ];
 
 export default function Sidebar() {
