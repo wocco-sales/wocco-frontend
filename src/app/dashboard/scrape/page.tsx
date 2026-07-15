@@ -115,7 +115,15 @@ export default function ScrapePage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
               <div>
                 <label style={labelStyle}>Source</label>
-                <select value={source} onChange={(e) => setSource(e.target.value)} style={inputStyle}>
+                <select
+                  value={source}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setSource(next);
+                    setMaxResults(next === "craigslist" ? 20 : 50);
+                  }}
+                  style={inputStyle}
+                >
                   <option value="google">Google Maps (phone + address)</option>
                   <option value="craigslist">Craigslist</option>
                 </select>
@@ -146,7 +154,9 @@ export default function ScrapePage() {
                 Uses Google Maps business listings — imports phone, full address, city, state, zip, and category.
               </p>
             ) : (
-              <div style={{ marginBottom: "12px" }} />
+              <p style={{ color: "#4b5563", fontSize: "11px", margin: "0 0 20px" }}>
+                Uses your rented Ivanvs Craigslist actor. Keep Max Results lower (e.g. 20) for shorter runs. For phone numbers, prefer Google Maps.
+              </p>
             )}
 
             <button type="submit" disabled={starting} style={{ background: "#2563eb", border: "none", color: "white", borderRadius: "8px", padding: "10px 20px", fontSize: "13px", fontWeight: "600", cursor: starting ? "wait" : "pointer", opacity: starting ? 0.7 : 1 }}>
