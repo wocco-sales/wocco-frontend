@@ -10,6 +10,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
+  const [leadType, setLeadType] = useState("business");
   const [callbackDate, setCallbackDate] = useState("");
   const [saved, setSaved] = useState(false);
 
@@ -22,6 +23,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
       const res = await api.get("/leads/" + params.id);
       setLead(res.data);
       setStatus(res.data.status);
+      setLeadType(res.data.leadType || "business");
       if (res.data.callbackDate) setCallbackDate(res.data.callbackDate.slice(0, 16));
     } catch (e) {
       console.error(e);
@@ -37,6 +39,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
         status,
         notes: note || lead.notes,
       });
+      await api.patch("/leads/" + params.id + "/type", { leadType });
       if (callbackDate) {
         await api.patch("/leads/" + params.id + "/callback", { callbackDate });
       }
@@ -76,7 +79,9 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
         <header style={{ background: "#111827", borderBottom: "1px solid #1f2937", padding: "16px 24px", display: "flex", alignItems: "center", gap: "12px" }}>
           <button onClick={() => router.push("/dashboard/leads")} style={{ background: "#1f2937", border: "1px solid #374151", color: "#9ca3af", borderRadius: "8px", padding: "6px 12px", fontSize: "12px", cursor: "pointer" }}>← Back</button>
           <div style={{ flex: 1 }}>
-            <h2 style={{ color: "white", fontWeight: "700", fontSize: "16px", margin: 0 }}>{lead.firstName} {lead.lastName}</h2>
+            <h2 style={{ color: "white", fontWeight: "700", fontSize: "16px", margin: 0 }}>
+              {lead.firstName ? `${lead.firstName} ${lead.lastName || ""}` : lead.title}
+            </h2>
             <p style={{ color: "#6b7280", fontSize: "11px", margin: "2px 0 0" }}>Lead ID: {lead.id}</p>
           </div>
           <span style={{ background: "rgba(96,165,250,0.1)", color: tempColors[lead.temperature], border: "1px solid " + tempColors[lead.temperature] + "40", fontSize: "11px", fontWeight: "700", padding: "4px 12px", borderRadius: "6px", textTransform: "uppercase" }}>
@@ -113,6 +118,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
               <h3 style={{ color: "white", fontWeight: "600", fontSize: "14px", margin: "0 0 16px", paddingBottom: "12px", borderBottom: "1px solid #1f2937" }}>Lead Details</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {[
+                  { label: "Lead Type", value: (lead.leadType || "business").toUpperCase() },
                   { label: "Service Category", value: lead.serviceCategory },
                   { label: "Service Type", value: lead.serviceType },
                   { label: "Source", value: lead.source?.toUpperCase() },
@@ -134,6 +140,13 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: "16px", padding: "24px" }}>
               <h3 style={{ color: "white", fontWeight: "600", fontSize: "14px", margin: "0 0 16px", paddingBottom: "12px", borderBottom: "1px solid #1f2937" }}>Update Lead</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div>
+                  <label style={{ color: "#9ca3af", fontSize: "12px", display: "block", marginBottom: "6px" }}>Lead Type</label>
+                  <select value={leadType} onChange={e => setLeadType(e.target.value)} style={{ width: "100%", background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px", padding: "10px 12px", fontSize: "13px", outline: "none" }}>
+                    <option value="business">Business</option>
+                    <option value="individual">Individual</option>
+                  </select>
+                </div>
                 <div>
                   <label style={{ color: "#9ca3af", fontSize: "12px", display: "block", marginBottom: "6px" }}>Status</label>
                   <select value={status} onChange={e => setStatus(e.target.value)} style={{ width: "100%", background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px", padding: "10px 12px", fontSize: "13px", outline: "none" }}>

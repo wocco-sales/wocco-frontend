@@ -13,7 +13,7 @@ export default function ImportPage() {
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState("");
 
-  const leadFields = ["title","firstName","lastName","phone","email","address","city","state","zipCode","serviceCategory","serviceType","notes","sourceUrl"];
+  const leadFields = ["title","leadType","firstName","lastName","phone","email","address","city","state","zipCode","serviceCategory","serviceType","notes","sourceUrl"];
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -37,7 +37,8 @@ export default function ImportPage() {
       const autoMap: any = {};
       hdrs.forEach(h => {
         const lower = h.toLowerCase();
-        if (lower.includes("first")) autoMap[h] = "firstName";
+        if (lower.includes("lead type") || lower === "type") autoMap[h] = "leadType";
+        else if (lower.includes("first")) autoMap[h] = "firstName";
         else if (lower.includes("last")) autoMap[h] = "lastName";
         else if (lower.includes("phone") || lower.includes("mobile")) autoMap[h] = "phone";
         else if (lower.includes("email")) autoMap[h] = "email";
@@ -67,8 +68,14 @@ export default function ImportPage() {
         const obj: any = { source: "csv_import" };
         hdrs.forEach((h, i) => {
           const field = mapping[h];
-          if (field && vals[i]) obj[field] = vals[i];
+          if (field && vals[i]) {
+            obj[field] =
+              field === "leadType" ? vals[i].toLowerCase() : vals[i];
+          }
         });
+        if (!["business", "individual"].includes(obj.leadType)) {
+          obj.leadType = "business";
+        }
         if (!obj.title) obj.title = [obj.firstName, obj.lastName].filter(Boolean).join(" ") || "Imported Lead";
         return obj;
       }).filter(l => l.title || l.firstName || l.phone);

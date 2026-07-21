@@ -97,7 +97,10 @@ export default function ScrapePage() {
     setImporting(true);
     setError("");
     try {
-      const res = await api.post(`/scraper/runs/${run.runId}/import`, { source: run.source || source });
+      const res = await api.post(`/scraper/runs/${run.runId}/import`, {
+        source: run.source || source,
+        target: run.target || target,
+      });
       setImportResult(res.data);
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Import failed"));

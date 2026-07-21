@@ -10,10 +10,11 @@ export default function LeadsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
 
   useEffect(() => {
     fetchLeads();
-  }, [statusFilter, sourceFilter]);
+  }, [statusFilter, sourceFilter, typeFilter]);
 
   async function fetchLeads() {
     try {
@@ -21,6 +22,7 @@ export default function LeadsPage() {
       const params: any = {};
       if (statusFilter) params.status = statusFilter;
       if (sourceFilter) params.source = sourceFilter;
+      if (typeFilter) params.leadType = typeFilter;
       const res = await api.get("/leads", { params });
       setLeads(res.data);
     } catch (e) {
@@ -36,6 +38,8 @@ export default function LeadsPage() {
     l.firstName?.toLowerCase().includes(search.toLowerCase()) ||
     l.lastName?.toLowerCase().includes(search.toLowerCase()) ||
     l.phone?.includes(search) ||
+    l.address?.toLowerCase().includes(search.toLowerCase()) ||
+    l.city?.toLowerCase().includes(search.toLowerCase()) ||
     l.state?.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -65,6 +69,17 @@ export default function LeadsPage() {
     }
   }
 
+  async function updateLeadType(id: string, leadType: string) {
+    try {
+      await api.patch("/leads/" + id + "/type", { leadType });
+      setLeads((prev) =>
+        prev.map((lead) => (lead.id === id ? { ...lead, leadType } : lead)),
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   return (
     <>
       <header style={{ background: "#111827", borderBottom: "1px solid #1f2937", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
@@ -78,7 +93,12 @@ export default function LeadsPage() {
         </header>
 
         <div style={{ padding: "16px 24px", background: "#0f172a", borderBottom: "1px solid #1f2937", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, phone, state..." style={{ flex: 1, minWidth: "200px", background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px", padding: "8px 14px", fontSize: "13px", outline: "none" }} />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, phone, or location..." style={{ flex: 1, minWidth: "200px", background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px", padding: "8px 14px", fontSize: "13px", outline: "none" }} />
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={{ background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px", padding: "8px 14px", fontSize: "13px", outline: "none" }}>
+            <option value="">All Lead Types</option>
+            <option value="individual">Individuals</option>
+            <option value="business">Businesses</option>
+          </select>
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px", padding: "8px 14px", fontSize: "13px", outline: "none" }}>
             <option value="">All Statuses</option>
             <option value="new">New</option>
@@ -114,7 +134,7 @@ export default function LeadsPage() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #1f2937" }}>
-                    {["Name", "Phone", "Email", "Location", "Category", "Source", "Temp", "Status", "Action"].map((h) => (
+                    {["Name", "Type", "Phone", "Email", "Location", "Work / Category", "Source", "Temp", "Status", "Action"].map((h) => (
                       <th key={h} style={{ padding: "12px 16px", textAlign: "left", color: "#6b7280", fontSize: "11px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>
                     ))}
                   </tr>
@@ -128,6 +148,16 @@ export default function LeadsPage() {
                       <td style={{ padding: "14px 16px", cursor: "pointer" }} onClick={() => router.push("/dashboard/leads/" + lead.id)}>
                         <p style={{ color: "white", fontSize: "13px", fontWeight: "500", margin: 0 }}>{lead.firstName || lead.title} {lead.lastName || ""}</p>
                         <p style={{ color: "#6b7280", fontSize: "11px", margin: "2px 0 0" }}>{lead.title}</p>
+                      </td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <select
+                          value={lead.leadType || "business"}
+                          onChange={(e) => updateLeadType(lead.id, e.target.value)}
+                          style={{ background: "#1f2937", border: "1px solid #374151", color: lead.leadType === "individual" ? "#c084fc" : "#60a5fa", borderRadius: "6px", padding: "4px 7px", fontSize: "10px", fontWeight: "700", outline: "none", cursor: "pointer", textTransform: "uppercase" }}
+                        >
+                          <option value="business">Business</option>
+                          <option value="individual">Individual</option>
+                        </select>
                       </td>
                       <td style={{ padding: "14px 16px", color: lead.phone ? "#34d399" : "#374151", fontSize: "13px" }}>{lead.phone || "---"}</td>
                       <td style={{ padding: "14px 16px", color: lead.email ? "#60a5fa" : "#374151", fontSize: "12px" }}>{lead.email || "---"}</td>
