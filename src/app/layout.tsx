@@ -14,11 +14,11 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "WOCCO — Sales Lead Platform",
-  description: "WOCCO sales lead generation and management platform",
+  title: "Greymoon — Sales Lead Platform",
+  description: "Greymoon sales lead generation and management platform",
   icons: {
-    icon: "/wocco-logo.png",
-    apple: "/wocco-logo.png",
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
   },
 };
 

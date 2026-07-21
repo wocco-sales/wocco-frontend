@@ -38,7 +38,7 @@ export default function LoginPage() {
     <AuthCard
       variant="login"
       title="Welcome Back"
-      subtitle="Sign in to your WOCCO account"
+      subtitle="Sign in to your Greymoon account"
       footer="By signing in, you agree to our Terms of Service and Privacy Policy"
     >
       {error && (
@@ -53,7 +53,7 @@ export default function LoginPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@gowocco.com"
+            placeholder="you@example.com"
             required
             autoComplete="email"
           />

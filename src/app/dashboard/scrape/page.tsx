@@ -11,6 +11,7 @@ interface ScrapeRun {
   runId: string;
   status: ScrapeStatus;
   source?: string;
+  target?: string;
 }
 
 interface ImportResult {
@@ -30,6 +31,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function ScrapePage() {
   const router = useRouter();
+  const [target, setTarget] = useState("business");
   const [source, setSource] = useState("google");
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
@@ -74,7 +76,13 @@ export default function ScrapePage() {
     setImportResult(null);
     setStarting(true);
     try {
-      const res = await api.post("/scraper/run", { source, query, location, maxResults });
+      const res = await api.post("/scraper/run", {
+        target,
+        source,
+        query,
+        location,
+        maxResults,
+      });
       setRun(res.data);
       startPolling(res.data.runId);
     } catch (err: unknown) {
@@ -117,6 +125,24 @@ export default function ScrapePage() {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
               <div>
+                <label style={labelStyle}>Lead Type</label>
+                <select
+                  value={target}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setTarget(next);
+                    if (next === "individual") {
+                      setSource("craigslist");
+                      setMaxResults(20);
+                    }
+                  }}
+                  style={inputStyle}
+                >
+                  <option value="business">Business</option>
+                  <option value="individual">Individual</option>
+                </select>
+              </div>
+              <div>
                 <label style={labelStyle}>Source</label>
                 <select
                   value={source}
@@ -127,10 +153,14 @@ export default function ScrapePage() {
                   }}
                   style={inputStyle}
                 >
-                  <option value="google">Google Maps (phone + address)</option>
+                  <option value="google" disabled={target === "individual"}>
+                    Google Maps (businesses only)
+                  </option>
                   <option value="craigslist">Craigslist</option>
                 </select>
               </div>
+            </div>
+            <div style={{ marginBottom: "16px" }}>
               <div>
                 <label style={labelStyle}>Max Results</label>
                 <input type="number" min={1} max={100} value={maxResults} onChange={(e) => setMaxResults(parseInt(e.target.value) || 50)} style={inputStyle} />
@@ -139,7 +169,17 @@ export default function ScrapePage() {
 
             <div style={{ marginBottom: "16px" }}>
               <label style={labelStyle}>Search Query</label>
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder='e.g. "roofing contractors"' required style={inputStyle} />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={
+                  target === "individual"
+                    ? 'e.g. "person selling lawn mower"'
+                    : 'e.g. "roofing contractors"'
+                }
+                required
+                style={inputStyle}
+              />
             </div>
 
             <div style={{ marginBottom: "8px" }}>
@@ -156,9 +196,13 @@ export default function ScrapePage() {
               <p style={{ color: "#4b5563", fontSize: "11px", margin: "0 0 20px" }}>
                 Uses Google Maps business listings — imports phone, full address, city, state, zip, and category.
               </p>
+            ) : target === "individual" ? (
+              <p style={{ color: "#4b5563", fontSize: "11px", margin: "0 0 20px" }}>
+                Searches public, owner-posted Craigslist listings. It does not search private people or private personal data.
+              </p>
             ) : (
               <p style={{ color: "#4b5563", fontSize: "11px", margin: "0 0 20px" }}>
-                Uses your rented Ivanvs Craigslist actor. Keep Max Results lower (e.g. 20) for shorter runs. For phone numbers, prefer Google Maps.
+                Searches Craigslist service listings with your rented Ivanvs actor. Keep Max Results lower (e.g. 20) for shorter runs.
               </p>
             )}
 

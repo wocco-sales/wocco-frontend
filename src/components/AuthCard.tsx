@@ -45,8 +45,8 @@ export default function AuthCard({
         <div className={`${styles.header} px-8 py-10 text-center text-white`}>
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-white/15">
             <Image
-              src="/wocco-logo.png"
-              alt="WOCCO"
+              src="/favicon.svg"
+              alt="Greymoon"
               width={40}
               height={40}
               className="object-contain"

@@ -77,7 +77,7 @@ export default function RegisterPage() {
             ✓
           </div>
           <p className="text-sm leading-6 text-slate-600">
-            WOCCO admin will review your account and activate it shortly. You
+            A Greymoon admin will review your account and activate it shortly. You
             can log in once approved.
           </p>
           <button
@@ -95,7 +95,7 @@ export default function RegisterPage() {
     <AuthCard
       variant="register"
       title="Create Account"
-      subtitle="Join the WOCCO sales platform"
+      subtitle="Join the Greymoon sales platform"
       footer="By creating an account, you agree to our Terms and Privacy Policy"
     >
       {error && (

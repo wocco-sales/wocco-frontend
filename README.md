@@ -1,6 +1,6 @@
-# WOCCO Platform — Frontend
+# Greymoon Platform — Frontend
 
-Next.js dashboard for the WOCCO sales lead platform.
+Next.js dashboard for the Greymoon sales lead platform.
 
 Backend API lives in the private [wocco-platform](https://github.com/wocco-sales/wocco-platform) monorepo.
 
