@@ -96,11 +96,28 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: "16px", padding: "24px" }}>
               <h3 style={{ color: "white", fontWeight: "600", fontSize: "14px", margin: "0 0 16px", paddingBottom: "12px", borderBottom: "1px solid #1f2937" }}>Contact Information</h3>
+              {lead.imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={lead.imageUrl}
+                  alt={lead.title}
+                  style={{
+                    width: lead.leadType === "individual" ? 88 : 120,
+                    height: lead.leadType === "individual" ? 88 : 80,
+                    objectFit: "cover",
+                    borderRadius: lead.leadType === "individual" ? "50%" : 12,
+                    marginBottom: 16,
+                    border: "1px solid #1f2937",
+                  }}
+                />
+              )}
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {[
+                  { label: "Lead Type", value: (lead.leadType || "business").toUpperCase() },
                   { label: "Full Name", value: (lead.firstName || "") + " " + (lead.lastName || "") },
                   { label: "Phone", value: lead.phone, color: "#34d399" },
                   { label: "Email", value: lead.email, color: "#60a5fa" },
+                  { label: "Website", value: lead.website, color: "#60a5fa" },
                   { label: "Address", value: lead.address },
                   { label: "City", value: lead.city },
                   { label: "State", value: lead.state },
@@ -118,7 +135,6 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
               <h3 style={{ color: "white", fontWeight: "600", fontSize: "14px", margin: "0 0 16px", paddingBottom: "12px", borderBottom: "1px solid #1f2937" }}>Lead Details</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {[
-                  { label: "Lead Type", value: (lead.leadType || "business").toUpperCase() },
                   { label: "Service Category", value: lead.serviceCategory },
                   { label: "Service Type", value: lead.serviceType },
                   { label: "Source", value: lead.source?.toUpperCase() },

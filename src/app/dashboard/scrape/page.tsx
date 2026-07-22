@@ -31,7 +31,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function ScrapePage() {
   const router = useRouter();
-  const [target, setTarget] = useState("business");
+  const [target, setTarget] = useState<"business" | "individual">("business");
   const [source, setSource] = useState("google");
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
@@ -54,6 +54,17 @@ export default function ScrapePage() {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, [router]);
+
+  function applyTarget(next: "business" | "individual") {
+    setTarget(next);
+    if (next === "individual") {
+      setSource("people");
+      setMaxResults(25);
+    } else {
+      setSource("google");
+      setMaxResults(50);
+    }
+  }
 
   function startPolling(runId: string) {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -110,41 +121,77 @@ export default function ScrapePage() {
   }
 
   const statusColor = (run?.status ? STATUS_COLORS[run.status] : undefined) || "#9ca3af";
-  const inputStyle = { width: "100%", background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px", padding: "10px 12px", fontSize: "13px", outline: "none", boxSizing: "border-box" as const };
-  const labelStyle = { color: "#9ca3af", fontSize: "12px", fontWeight: "600" as const, display: "block", marginBottom: "6px" };
+  const inputStyle = {
+    width: "100%",
+    background: "#1f2937",
+    border: "1px solid #374151",
+    color: "white",
+    borderRadius: "8px",
+    padding: "10px 12px",
+    fontSize: "13px",
+    outline: "none",
+    boxSizing: "border-box" as const,
+  };
+  const labelStyle = {
+    color: "#9ca3af",
+    fontSize: "12px",
+    fontWeight: "600" as const,
+    display: "block",
+    marginBottom: "6px",
+  };
 
   return (
     <>
       <header style={{ background: "#111827", borderBottom: "1px solid #1f2937", padding: "16px 24px", flexShrink: 0 }}>
         <h2 style={{ color: "white", fontWeight: "600", fontSize: "15px", margin: 0 }}>Lead Scraper</h2>
-        <p style={{ color: "#6b7280", fontSize: "11px", margin: "2px 0 0" }}>Run Apify scrapers and import results as leads</p>
+        <p style={{ color: "#6b7280", fontSize: "11px", margin: "2px 0 0" }}>
+          Scrape people or businesses — imported leads keep their identity
+        </p>
       </header>
 
       <main style={{ flex: 1, overflow: "auto", padding: "24px" }}>
         <div style={{ maxWidth: "720px", display: "flex", flexDirection: "column", gap: "20px" }}>
-
-          <form onSubmit={handleStart} style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: "16px", padding: "24px" }}>
+          <form
+            onSubmit={handleStart}
+            style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: "16px", padding: "24px" }}
+          >
             <h3 style={{ color: "white", fontWeight: "600", fontSize: "14px", margin: "0 0 20px" }}>New Scrape</h3>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
-              <div>
-                <label style={labelStyle}>Lead Type</label>
-                <select
-                  value={target}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    setTarget(next);
-                    if (next === "individual") {
-                      setSource("craigslist");
-                      setMaxResults(20);
-                    }
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+              {(
+                [
+                  {
+                    key: "individual" as const,
+                    title: "Individual",
+                    desc: "Person identity: name, email, phone, role",
+                  },
+                  {
+                    key: "business" as const,
+                    title: "Business",
+                    desc: "Company listing: name, phone, address, category",
+                  },
+                ] as const
+              ).map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => applyTarget(option.key)}
+                  style={{
+                    textAlign: "left",
+                    background: target === option.key ? "rgba(37,99,235,0.18)" : "#1f2937",
+                    border: `1px solid ${target === option.key ? "#2563eb" : "#374151"}`,
+                    borderRadius: "12px",
+                    padding: "14px",
+                    cursor: "pointer",
                   }}
-                  style={inputStyle}
                 >
-                  <option value="business">Business</option>
-                  <option value="individual">Individual</option>
-                </select>
-              </div>
+                  <p style={{ color: "white", fontWeight: 700, fontSize: "13px", margin: 0 }}>{option.title}</p>
+                  <p style={{ color: "#9ca3af", fontSize: "11px", margin: "6px 0 0", lineHeight: 1.4 }}>{option.desc}</p>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
               <div>
                 <label style={labelStyle}>Source</label>
                 <select
@@ -152,33 +199,49 @@ export default function ScrapePage() {
                   onChange={(e) => {
                     const next = e.target.value;
                     setSource(next);
-                    setMaxResults(next === "craigslist" ? 20 : 50);
+                    setMaxResults(next === "craigslist" ? 20 : next === "people" ? 25 : 50);
                   }}
                   style={inputStyle}
                 >
-                  <option value="google" disabled={target === "individual"}>
-                    Google Maps (businesses only)
-                  </option>
-                  <option value="craigslist">Craigslist</option>
+                  {target === "individual" ? (
+                    <>
+                      <option value="people">People Finder (name + email + phone)</option>
+                      <option value="craigslist">Craigslist owners (listings + photos)</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="google">Google Maps (businesses)</option>
+                      <option value="craigslist">Craigslist services</option>
+                    </>
+                  )}
                 </select>
               </div>
-            </div>
-            <div style={{ marginBottom: "16px" }}>
               <div>
                 <label style={labelStyle}>Max Results</label>
-                <input type="number" min={1} max={100} value={maxResults} onChange={(e) => setMaxResults(parseInt(e.target.value) || 50)} style={inputStyle} />
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={maxResults}
+                  onChange={(e) => setMaxResults(parseInt(e.target.value) || 50)}
+                  style={inputStyle}
+                />
               </div>
             </div>
 
             <div style={{ marginBottom: "16px" }}>
-              <label style={labelStyle}>Search Query</label>
+              <label style={labelStyle}>
+                {source === "people" ? "Job title / role" : "Search Query"}
+              </label>
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={
-                  target === "individual"
-                    ? 'e.g. "person selling lawn mower"'
-                    : 'e.g. "roofing contractors"'
+                  source === "people"
+                    ? 'e.g. "HVAC technician" or "homeowner"'
+                    : target === "individual"
+                      ? 'e.g. "lawn mower" or "furniture"'
+                      : 'e.g. "roofing contractors"'
                 }
                 required
                 style={inputStyle}
@@ -186,36 +249,71 @@ export default function ScrapePage() {
             </div>
 
             <div style={{ marginBottom: "8px" }}>
-              <label style={labelStyle}>{source === "craigslist" ? "City (craigslist subdomain, e.g. dallas)" : "Location (required)"}</label>
+              <label style={labelStyle}>
+                {source === "craigslist"
+                  ? "City (craigslist subdomain, e.g. dallas)"
+                  : source === "people"
+                    ? "Location (city or region)"
+                    : "Location (required)"}
+              </label>
               <input
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder={source === "craigslist" ? "dallas" : "e.g. Dallas, TX, USA"}
+                placeholder={
+                  source === "craigslist"
+                    ? "dallas"
+                    : source === "people"
+                      ? "e.g. Dallas or Texas, United States"
+                      : "e.g. Dallas, TX, USA"
+                }
                 required={source === "google"}
                 style={inputStyle}
               />
             </div>
-            {source === "google" ? (
-              <p style={{ color: "#4b5563", fontSize: "11px", margin: "0 0 20px" }}>
-                Uses Google Maps business listings — imports phone, full address, city, state, zip, and category.
-              </p>
-            ) : target === "individual" ? (
-              <p style={{ color: "#4b5563", fontSize: "11px", margin: "0 0 20px" }}>
-                Searches public, owner-posted Craigslist listings. It does not search private people or private personal data.
-              </p>
-            ) : (
-              <p style={{ color: "#4b5563", fontSize: "11px", margin: "0 0 20px" }}>
-                Searches Craigslist service listings with your rented Ivanvs actor. Keep Max Results lower (e.g. 20) for shorter runs.
-              </p>
-            )}
 
-            <button type="submit" disabled={starting} style={{ background: "#2563eb", border: "none", color: "white", borderRadius: "8px", padding: "10px 20px", fontSize: "13px", fontWeight: "600", cursor: starting ? "wait" : "pointer", opacity: starting ? 0.7 : 1 }}>
+            <p style={{ color: "#4b5563", fontSize: "11px", margin: "0 0 20px", lineHeight: 1.5 }}>
+              {source === "people" &&
+                "Uses Apify People Finder (~$1.50 / 1,000). Returns person name, work/personal email, phone, job title, and company."}
+              {source === "google" &&
+                "Uses Google Maps business listings — business name, phone, full address, category, and website when available."}
+              {source === "craigslist" &&
+                target === "individual" &&
+                "Uses your rented Craigslist actor on owner-posted listings. Imports photo, phone/email when present in the post."}
+              {source === "craigslist" &&
+                target === "business" &&
+                "Uses your rented Craigslist actor on services listings."}
+            </p>
+
+            <button
+              type="submit"
+              disabled={starting}
+              style={{
+                background: "#2563eb",
+                border: "none",
+                color: "white",
+                borderRadius: "8px",
+                padding: "10px 20px",
+                fontSize: "13px",
+                fontWeight: "600",
+                cursor: starting ? "wait" : "pointer",
+                opacity: starting ? 0.7 : 1,
+              }}
+            >
               {starting ? "Starting..." : "Run Scrape"}
             </button>
           </form>
 
           {error && (
-            <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: "12px", padding: "14px 16px", color: "#ef4444", fontSize: "13px" }}>
+            <div
+              style={{
+                background: "rgba(239,68,68,0.1)",
+                border: "1px solid rgba(239,68,68,0.25)",
+                borderRadius: "12px",
+                padding: "14px 16px",
+                color: "#ef4444",
+                fontSize: "13px",
+              }}
+            >
               {error}
             </div>
           )}
@@ -224,36 +322,92 @@ export default function ScrapePage() {
             <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: "16px", padding: "24px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
                 <h3 style={{ color: "white", fontWeight: "600", fontSize: "14px", margin: 0 }}>Scrape Run</h3>
-                <span style={{ background: statusColor + "22", color: statusColor, fontSize: "11px", fontWeight: "700", padding: "4px 12px", borderRadius: "6px" }}>
+                <span
+                  style={{
+                    background: statusColor + "22",
+                    color: statusColor,
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    padding: "4px 12px",
+                    borderRadius: "6px",
+                  }}
+                >
                   {run.status}
                 </span>
               </div>
 
-              <p style={{ color: "#6b7280", fontSize: "12px", margin: "0 0 4px" }}>Run ID: <span style={{ color: "#9ca3af" }}>{run.runId}</span></p>
+              <p style={{ color: "#6b7280", fontSize: "12px", margin: "0 0 4px" }}>
+                Type: <span style={{ color: "#e5e7eb" }}>{run.target || target}</span>
+                {" · "}
+                Source: <span style={{ color: "#e5e7eb" }}>{run.source || source}</span>
+              </p>
+              <p style={{ color: "#6b7280", fontSize: "12px", margin: "0 0 4px" }}>
+                Run ID: <span style={{ color: "#9ca3af" }}>{run.runId}</span>
+              </p>
+
               {run.status === "RUNNING" || run.status === "READY" ? (
-                <p style={{ color: "#fbbf24", fontSize: "12px", margin: "12px 0 0" }}>Scraping in progress — this page checks status every 5 seconds...</p>
+                <p style={{ color: "#fbbf24", fontSize: "12px", margin: "12px 0 0" }}>
+                  Scraping in progress — this page checks status every 5 seconds...
+                </p>
               ) : run.status === "SUCCEEDED" ? (
-                <button onClick={handleImport} disabled={importing} style={{ marginTop: "16px", background: "#10b981", border: "none", color: "white", borderRadius: "8px", padding: "10px 20px", fontSize: "13px", fontWeight: "600", cursor: importing ? "wait" : "pointer", opacity: importing ? 0.7 : 1 }}>
+                <button
+                  onClick={handleImport}
+                  disabled={importing}
+                  style={{
+                    marginTop: "16px",
+                    background: "#10b981",
+                    border: "none",
+                    color: "white",
+                    borderRadius: "8px",
+                    padding: "10px 20px",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    cursor: importing ? "wait" : "pointer",
+                    opacity: importing ? 0.7 : 1,
+                  }}
+                >
                   {importing ? "Importing..." : "Import Results as Leads"}
                 </button>
               ) : (
-                <p style={{ color: "#ef4444", fontSize: "12px", margin: "12px 0 0" }}>Run did not complete successfully. Check your Apify console for details.</p>
+                <p style={{ color: "#ef4444", fontSize: "12px", margin: "12px 0 0" }}>
+                  Run did not complete successfully. Check your Apify console for details.
+                </p>
               )}
 
               {importResult && (
-                <div style={{ marginTop: "16px", background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.25)", borderRadius: "12px", padding: "16px" }}>
+                <div
+                  style={{
+                    marginTop: "16px",
+                    background: "rgba(52,211,153,0.08)",
+                    border: "1px solid rgba(52,211,153,0.25)",
+                    borderRadius: "12px",
+                    padding: "16px",
+                  }}
+                >
                   <p style={{ color: "#34d399", fontSize: "13px", fontWeight: "600", margin: "0 0 4px" }}>
                     Imported {importResult.imported} new lead{importResult.imported === 1 ? "" : "s"}
                   </p>
                   <p style={{ color: "#6b7280", fontSize: "12px", margin: "0 0 12px" }}>
                     {importResult.scraped} scraped, {importResult.skipped} skipped as duplicates
                   </p>
-                  <a href="/dashboard/leads" style={{ background: "#2563eb", color: "white", borderRadius: "8px", padding: "8px 16px", fontSize: "12px", fontWeight: "600", textDecoration: "none" }}>View Leads</a>
+                  <a
+                    href="/dashboard/leads"
+                    style={{
+                      background: "#2563eb",
+                      color: "white",
+                      borderRadius: "8px",
+                      padding: "8px 16px",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      textDecoration: "none",
+                    }}
+                  >
+                    View Leads
+                  </a>
                 </div>
               )}
             </div>
           )}
-
         </div>
       </main>
     </>
