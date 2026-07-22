@@ -11,16 +11,84 @@ function displayName(lead: any) {
   return lead.title || [lead.firstName, lead.lastName].filter(Boolean).join(" ") || "Business lead";
 }
 
-function locationLabel(lead: any) {
-  if (lead.city && lead.state) return `${lead.city}, ${lead.state}`;
-  return lead.city || lead.state || lead.address || "---";
-}
-
 function initials(lead: any) {
   const name = displayName(lead);
   const parts = name.split(/\s+/).filter(Boolean);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return name.slice(0, 2).toUpperCase();
+}
+
+function isValidImageUrl(url?: string | null) {
+  return !!url && /^https?:\/\//i.test(url);
+}
+
+function extractPhone(text?: string | null) {
+  if (!text) return "";
+  const match = String(text).match(
+    /(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}/,
+  );
+  return match?.[0]?.replace(/\s+/g, " ").trim() || "";
+}
+
+function extractEmail(text?: string | null) {
+  if (!text) return "";
+  const match = String(text).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  return match?.[0] || "";
+}
+
+function contactPhone(lead: any) {
+  return lead.phone || extractPhone(lead.notes) || "";
+}
+
+function contactEmail(lead: any) {
+  return lead.email || extractEmail(lead.notes) || "";
+}
+
+function LeadAvatar({
+  lead,
+  onClick,
+}: {
+  lead: any;
+  onClick: () => void;
+}) {
+  const isPerson = lead.leadType === "individual";
+  const [broken, setBroken] = useState(false);
+  const showImage = isValidImageUrl(lead.imageUrl) && !broken;
+
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: 56,
+        height: 56,
+        borderRadius: isPerson ? "50%" : "12px",
+        border: "none",
+        overflow: "hidden",
+        padding: 0,
+        cursor: "pointer",
+        background: isPerson ? "#4c1d95" : "#1e3a8a",
+        color: "white",
+        fontWeight: 700,
+        fontSize: 15,
+        flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {showImage ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={lead.imageUrl}
+          alt=""
+          onError={() => setBroken(true)}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      ) : (
+        initials(lead)
+      )}
+    </button>
+  );
 }
 
 export default function LeadsPage() {
@@ -52,19 +120,20 @@ export default function LeadsPage() {
     }
   }
 
-  const filtered = leads.filter(
-    (l) =>
+  const filtered = leads.filter((l) => {
+    const phone = contactPhone(l);
+    const email = contactEmail(l);
+    return (
       search === "" ||
       l.title?.toLowerCase().includes(search.toLowerCase()) ||
       l.firstName?.toLowerCase().includes(search.toLowerCase()) ||
       l.lastName?.toLowerCase().includes(search.toLowerCase()) ||
-      l.email?.toLowerCase().includes(search.toLowerCase()) ||
-      l.phone?.includes(search) ||
-      l.address?.toLowerCase().includes(search.toLowerCase()) ||
+      email.toLowerCase().includes(search.toLowerCase()) ||
+      phone.includes(search) ||
       l.city?.toLowerCase().includes(search.toLowerCase()) ||
-      l.state?.toLowerCase().includes(search.toLowerCase()) ||
-      l.serviceCategory?.toLowerCase().includes(search.toLowerCase()),
-  );
+      l.state?.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
   const individualCount = leads.filter((l) => l.leadType === "individual").length;
   const businessCount = leads.filter((l) => (l.leadType || "business") === "business").length;
@@ -164,7 +233,7 @@ export default function LeadsPage() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search name, phone, email, location, work..."
+          placeholder="Search name, phone, or email..."
           style={{
             flex: 1,
             minWidth: "220px",
@@ -248,52 +317,34 @@ export default function LeadsPage() {
             </p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {filtered.map((lead) => {
               const isPerson = lead.leadType === "individual";
+              const phone = contactPhone(lead);
+              const email = contactEmail(lead);
               return (
                 <div
                   key={lead.id}
                   style={{
                     background: "#111827",
                     border: `1px solid ${isPerson ? "rgba(168,85,247,0.35)" : "rgba(96,165,250,0.28)"}`,
-                    borderRadius: "16px",
-                    padding: "16px",
+                    borderRadius: "14px",
+                    padding: "14px 16px",
                     display: "grid",
-                    gridTemplateColumns: "72px 1.4fr 1fr 1fr auto",
+                    gridTemplateColumns: "56px minmax(0, 1.5fr) minmax(160px, 1fr) auto",
                     gap: "16px",
                     alignItems: "center",
                   }}
                 >
-                  <button
+                  <LeadAvatar
+                    lead={lead}
                     onClick={() => router.push("/dashboard/leads/" + lead.id)}
-                    style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: isPerson ? "50%" : "14px",
-                      border: "none",
-                      overflow: "hidden",
-                      padding: 0,
-                      cursor: "pointer",
-                      background: isPerson ? "#4c1d95" : "#1e3a8a",
-                      color: "white",
-                      fontWeight: 700,
-                      fontSize: 16,
-                    }}
-                  >
-                    {lead.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={lead.imageUrl}
-                        alt={displayName(lead)}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    ) : (
-                      initials(lead)
-                    )}
-                  </button>
+                  />
 
-                  <div style={{ cursor: "pointer" }} onClick={() => router.push("/dashboard/leads/" + lead.id)}>
+                  <div
+                    style={{ cursor: "pointer", minWidth: 0 }}
+                    onClick={() => router.push("/dashboard/leads/" + lead.id)}
+                  >
                     <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
                       <span
                         style={{
@@ -312,31 +363,31 @@ export default function LeadsPage() {
                         {lead.source}
                       </span>
                     </div>
-                    <p style={{ color: "white", fontSize: 14, fontWeight: 700, margin: 0 }}>{displayName(lead)}</p>
-                    <p style={{ color: "#9ca3af", fontSize: 12, margin: "4px 0 0" }}>
-                      {isPerson
-                        ? lead.serviceCategory || lead.serviceType || lead.title
-                        : lead.serviceCategory || lead.website || "Business listing"}
+                    <p
+                      style={{
+                        color: "white",
+                        fontSize: 14,
+                        fontWeight: 700,
+                        margin: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {displayName(lead)}
+                    </p>
+                    <p style={{ color: "#6b7280", fontSize: 11, margin: "4px 0 0" }}>
+                      Click to view about details
                     </p>
                   </div>
 
                   <div>
                     <p style={{ color: "#6b7280", fontSize: 11, margin: "0 0 4px" }}>Contact</p>
-                    <p style={{ color: lead.phone ? "#34d399" : "#4b5563", fontSize: 12, margin: 0 }}>
-                      {lead.phone || "No phone"}
+                    <p style={{ color: phone ? "#34d399" : "#4b5563", fontSize: 13, margin: 0, fontWeight: 600 }}>
+                      {phone || "No phone"}
                     </p>
-                    <p style={{ color: lead.email ? "#60a5fa" : "#4b5563", fontSize: 12, margin: "4px 0 0" }}>
-                      {lead.email || "No email"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p style={{ color: "#6b7280", fontSize: 11, margin: "0 0 4px" }}>
-                      {isPerson ? "Location / Work" : "Location / Category"}
-                    </p>
-                    <p style={{ color: "#e5e7eb", fontSize: 12, margin: 0 }}>{locationLabel(lead)}</p>
-                    <p style={{ color: "#9ca3af", fontSize: 12, margin: "4px 0 0" }}>
-                      {lead.serviceCategory || lead.serviceType || "---"}
+                    <p style={{ color: email ? "#60a5fa" : "#4b5563", fontSize: 12, margin: "4px 0 0" }}>
+                      {email || "No email"}
                     </p>
                   </div>
 
