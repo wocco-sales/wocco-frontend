@@ -18,6 +18,8 @@ interface ImportResult {
   imported: number;
   scraped: number;
   skipped: number;
+  skippedNoContact?: number;
+  batchId?: string;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -111,6 +113,7 @@ export default function ScrapePage() {
       const res = await api.post(`/scraper/runs/${run.runId}/import`, {
         source: run.source || source,
         target: run.target || target,
+        query,
       });
       setImportResult(res.data);
     } catch (err: unknown) {
@@ -389,9 +392,12 @@ export default function ScrapePage() {
                   </p>
                   <p style={{ color: "#6b7280", fontSize: "12px", margin: "0 0 12px" }}>
                     {importResult.scraped} scraped, {importResult.skipped} skipped as duplicates
+                    {importResult.skippedNoContact
+                      ? `, ${importResult.skippedNoContact} skipped (no email or phone)`
+                      : ""}
                   </p>
                   <a
-                    href="/dashboard/leads"
+                    href={`/dashboard/leads?batch=${encodeURIComponent(importResult.batchId || run.runId)}`}
                     style={{
                       background: "#2563eb",
                       color: "white",

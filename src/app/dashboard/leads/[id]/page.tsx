@@ -146,7 +146,11 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
         }}
       >
         <button
-          onClick={() => router.push("/dashboard/leads")}
+          onClick={() => {
+            // Preserve list filters — go back in history when possible
+            if (window.history.length > 1) router.back();
+            else router.push("/dashboard/leads");
+          }}
           style={{
             background: "#1f2937",
             border: "1px solid #374151",
@@ -277,6 +281,29 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                 </div>
               ))}
             </div>
+
+            {lead.source === "craigslist" && !phone && !email && isValidImageUrl(lead.sourceUrl) && (
+              <a
+                href={lead.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "block",
+                  marginTop: "16px",
+                  background: "rgba(96,165,250,0.12)",
+                  border: "1px solid rgba(96,165,250,0.35)",
+                  color: "#60a5fa",
+                  borderRadius: "10px",
+                  padding: "10px 16px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  textAlign: "center",
+                  textDecoration: "none",
+                }}
+              >
+                No contact info — Reply on Craigslist ↗
+              </a>
+            )}
           </div>
 
           <div

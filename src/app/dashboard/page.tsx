@@ -10,6 +10,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState<any>({ total: 0, newToday: 0, called: 0, closedWon: 0, interested: 0, byStatus: [], bySource: [], byState: [] });
   const [loadingStats, setLoadingStats] = useState(true);
+  const [hoveredCard, setHoveredCard] = useState("");
 
   useEffect(() => {
     setUser(getUser());
@@ -44,12 +45,26 @@ export default function DashboardPage() {
             <main style={{ flex: 1, overflow: "auto", padding: "24px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px", marginBottom: "24px" }}>
                 {[
-                  { label: "Total Leads", value: stats.total, sub: "In database", color: "#60a5fa", bg: "rgba(96,165,250,0.1)", border: "rgba(96,165,250,0.2)" },
-                  { label: "New Today", value: stats.newToday, sub: "Added today", color: "#34d399", bg: "rgba(52,211,153,0.1)", border: "rgba(52,211,153,0.2)" },
-                  { label: "Called", value: stats.called, sub: "Contacted", color: "#fbbf24", bg: "rgba(251,191,36,0.1)", border: "rgba(251,191,36,0.2)" },
-                  { label: "Closed Won", value: stats.closedWon, sub: "Converted", color: "#a78bfa", bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.2)" },
+                  { label: "Total Leads", value: stats.total, sub: "In database — click to view", color: "#60a5fa", bg: "rgba(96,165,250,0.1)", border: "rgba(96,165,250,0.2)", href: "/dashboard/leads" },
+                  { label: "New Today", value: stats.newToday, sub: "Added today — click to view", color: "#34d399", bg: "rgba(52,211,153,0.1)", border: "rgba(52,211,153,0.2)", href: "/dashboard/leads?newToday=1" },
+                  { label: "Called", value: stats.called, sub: "Contacted", color: "#fbbf24", bg: "rgba(251,191,36,0.1)", border: "rgba(251,191,36,0.2)", href: "" },
+                  { label: "Closed Won", value: stats.closedWon, sub: "Converted", color: "#a78bfa", bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.2)", href: "" },
                 ].map((s) => (
-                  <div key={s.label} style={{ background: "#111827", border: "1px solid " + s.border, borderRadius: "16px", padding: "20px" }}>
+                  <div
+                    key={s.label}
+                    onClick={s.href ? () => router.push(s.href) : undefined}
+                    onMouseEnter={s.href ? () => setHoveredCard(s.label) : undefined}
+                    onMouseLeave={s.href ? () => setHoveredCard("") : undefined}
+                    role={s.href ? "link" : undefined}
+                    style={{
+                      background: hoveredCard === s.label ? "#151f33" : "#111827",
+                      border: "1px solid " + (hoveredCard === s.label ? s.color : s.border),
+                      borderRadius: "16px",
+                      padding: "20px",
+                      cursor: s.href ? "pointer" : "default",
+                      transition: "border-color 0.15s ease, background 0.15s ease",
+                    }}
+                  >
                     <span style={{ background: s.bg, color: s.color, fontSize: "11px", fontWeight: "600", padding: "3px 10px", borderRadius: "6px", display: "inline-block", marginBottom: "12px" }}>{s.label}</span>
                     <p style={{ color: s.color, fontSize: "32px", fontWeight: "900", margin: "0 0 2px" }}>{loadingStats ? "..." : s.value}</p>
                     <p style={{ color: "#4b5563", fontSize: "11px", margin: 0 }}>{s.sub}</p>
