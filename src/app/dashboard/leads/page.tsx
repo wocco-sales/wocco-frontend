@@ -94,6 +94,46 @@ function LeadAvatar({
   );
 }
 
+const SOURCE_LABELS: Record<string, string> = {
+  google: "Google",
+  people: "People Finder",
+  craigslist: "Craigslist",
+  facebook: "Facebook",
+  csv_import: "CSV Import",
+  manual: "Manual",
+};
+
+type ImportBatch = {
+  batchId: string;
+  count: number;
+  importedAt: string | null;
+  source: string | null;
+  serviceCategory: string | null;
+  leadType: string | null;
+};
+
+function batchDate(batch: ImportBatch) {
+  if (!batch.importedAt) return "";
+  const d = new Date(batch.importedAt);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function batchLabel(batch: ImportBatch) {
+  const parts = [
+    batchDate(batch) || "Unknown date",
+    batch.serviceCategory,
+    batch.source ? SOURCE_LABELS[batch.source] || batch.source : null,
+    `${batch.count} lead${batch.count === 1 ? "" : "s"}`,
+  ].filter(Boolean);
+  return parts.join(" · ");
+}
+
 const selectStyle = {
   background: "#1f2937",
   border: "1px solid #374151",
@@ -126,6 +166,7 @@ function LeadsPageInner() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
+  const [batches, setBatches] = useState<ImportBatch[]>([]);
   const [searchInput, setSearchInput] = useState(urlSearch);
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -188,6 +229,10 @@ function LeadsPageInner() {
       .get("/leads/categories")
       .then((res) => setCategories(Array.isArray(res.data) ? res.data : []))
       .catch(() => setCategories([]));
+    api
+      .get("/leads/batches")
+      .then((res) => setBatches(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setBatches([]));
   }, []);
 
   // Debounced search → URL
@@ -207,6 +252,9 @@ function LeadsPageInner() {
     categoryFilter && !categories.includes(categoryFilter)
       ? [categoryFilter, ...categories]
       : categories;
+  const selectedBatch = batchFilter
+    ? batches.find((b) => b.batchId === batchFilter) || null
+    : null;
 
   const statusColors: any = {
     new: { bg: "rgba(96,165,250,0.15)", color: "#60a5fa" },
@@ -277,8 +325,21 @@ function LeadsPageInner() {
           }}
         >
           <p style={{ color: "#34d399", fontSize: "12px", fontWeight: 600, margin: 0 }}>
-            Showing {loading ? "..." : total} lead{total === 1 ? "" : "s"} from latest scrape
-            <span style={{ color: "#6b7280", fontWeight: 400 }}> · batch {batchFilter}</span>
+            Showing {loading ? "..." : total} lead{total === 1 ? "" : "s"} from import
+            <span style={{ color: "#6b7280", fontWeight: 400 }}>
+              {" · "}
+              {selectedBatch
+                ? [
+                    batchDate(selectedBatch),
+                    selectedBatch.serviceCategory,
+                    selectedBatch.source
+                      ? SOURCE_LABELS[selectedBatch.source] || selectedBatch.source
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")
+                : `batch ${batchFilter}`}
+            </span>
           </p>
           <button
             onClick={() => setParams({ batch: null })}
@@ -422,6 +483,22 @@ function LeadsPageInner() {
           {categoryOptions.map((c) => (
             <option key={c} value={c}>
               {c}
+            </option>
+          ))}
+        </select>
+        <select
+          value={batchFilter}
+          onChange={(e) => setParams({ batch: e.target.value || null })}
+          title="Filter by scrape / import batch"
+          style={{ ...selectStyle, maxWidth: "260px" }}
+        >
+          <option value="">All Imports</option>
+          {batchFilter && !batches.some((b) => b.batchId === batchFilter) && (
+            <option value={batchFilter}>Batch {batchFilter}</option>
+          )}
+          {batches.map((b) => (
+            <option key={b.batchId} value={b.batchId}>
+              {batchLabel(b)}
             </option>
           ))}
         </select>
