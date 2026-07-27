@@ -238,7 +238,7 @@ export default function ScrapePage() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={
                   source === "people"
-                    ? 'e.g. "HVAC technician" or "homeowner"'
+                    ? 'e.g. "real estate agent" or "property manager"'
                     : target === "individual"
                       ? 'e.g. "lawn mower" or "furniture"'
                       : 'e.g. "roofing contractors"'
@@ -251,9 +251,9 @@ export default function ScrapePage() {
             <div style={{ marginBottom: "8px" }}>
               <label style={labelStyle}>
                 {source === "craigslist"
-                  ? "City (craigslist subdomain, e.g. dallas)"
+                  ? "City (Craigslist site, e.g. dallas — states auto-map)"
                   : source === "people"
-                    ? "Location (city or region)"
+                    ? "Location (city, or state like texas)"
                     : "Location (required)"}
               </label>
               <input
@@ -261,9 +261,9 @@ export default function ScrapePage() {
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder={
                   source === "craigslist"
-                    ? "dallas"
+                    ? "dallas (city site — not a state name)"
                     : source === "people"
-                      ? "e.g. Dallas or Texas, United States"
+                      ? 'e.g. "Dallas" or "texas" or "texas, us"'
                       : "e.g. Dallas, TX, USA"
                 }
                 required={source === "google"}
@@ -273,15 +273,15 @@ export default function ScrapePage() {
 
             <p style={{ color: "#4b5563", fontSize: "11px", margin: "0 0 20px", lineHeight: 1.5 }}>
               {source === "people" &&
-                "Uses Apify People Finder (~$1.50 / 1,000). Returns person name, work/personal email, phone, job title, and company."}
+                "Uses Apify People Finder (~$1.50 / 1,000). Use a real job title (not “homeowner”). State names like “texas” map to texas, us; city names like “dallas” use city filter."}
               {source === "google" &&
                 "Uses Google Maps business listings — business name, phone, full address, category, and website when available."}
               {source === "craigslist" &&
                 target === "individual" &&
-                "Uses your rented Craigslist actor on owner-posted listings. Imports photo, phone/email when present in the post."}
+                "Uses your rented Craigslist actor on owner-posted listings. Location must be a Craigslist city (dallas, miami). State names auto-map to a major city."}
               {source === "craigslist" &&
                 target === "business" &&
-                "Uses your rented Craigslist actor on services listings."}
+                "Uses your rented Craigslist actor on services listings. Use a city subdomain (e.g. dallas), not a state name."}
             </p>
 
             <button
