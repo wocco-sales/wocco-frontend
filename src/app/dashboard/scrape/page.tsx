@@ -19,7 +19,9 @@ interface ImportResult {
   scraped: number;
   skipped: number;
   skippedNoContact?: number;
+  skippedJunk?: number;
   batchId?: string;
+  message?: string;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -381,35 +383,54 @@ export default function ScrapePage() {
                 <div
                   style={{
                     marginTop: "16px",
-                    background: "rgba(52,211,153,0.08)",
-                    border: "1px solid rgba(52,211,153,0.25)",
+                    background:
+                      importResult.imported > 0
+                        ? "rgba(52,211,153,0.08)"
+                        : "rgba(251,191,36,0.08)",
+                    border:
+                      importResult.imported > 0
+                        ? "1px solid rgba(52,211,153,0.25)"
+                        : "1px solid rgba(251,191,36,0.3)",
                     borderRadius: "12px",
                     padding: "16px",
                   }}
                 >
-                  <p style={{ color: "#34d399", fontSize: "13px", fontWeight: "600", margin: "0 0 4px" }}>
-                    Imported {importResult.imported} new lead{importResult.imported === 1 ? "" : "s"}
+                  <p
+                    style={{
+                      color: importResult.imported > 0 ? "#34d399" : "#fbbf24",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      margin: "0 0 4px",
+                    }}
+                  >
+                    {importResult.message ||
+                      `Imported ${importResult.imported} new lead${importResult.imported === 1 ? "" : "s"}`}
                   </p>
                   <p style={{ color: "#6b7280", fontSize: "12px", margin: "0 0 12px" }}>
                     {importResult.scraped} scraped, {importResult.skipped} skipped as duplicates
+                    {importResult.skippedJunk
+                      ? `, ${importResult.skippedJunk} filtered (status/error/junk)`
+                      : ""}
                     {importResult.skippedNoContact
                       ? `, ${importResult.skippedNoContact} skipped (no email or phone)`
                       : ""}
                   </p>
-                  <a
-                    href={`/dashboard/leads?batch=${encodeURIComponent(importResult.batchId || run.runId)}`}
-                    style={{
-                      background: "#2563eb",
-                      color: "white",
-                      borderRadius: "8px",
-                      padding: "8px 16px",
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      textDecoration: "none",
-                    }}
-                  >
-                    View Leads
-                  </a>
+                  {importResult.imported > 0 && (
+                    <a
+                      href={`/dashboard/leads?batch=${encodeURIComponent(importResult.batchId || run.runId)}`}
+                      style={{
+                        background: "#2563eb",
+                        color: "white",
+                        borderRadius: "8px",
+                        padding: "8px 16px",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        textDecoration: "none",
+                      }}
+                    >
+                      View Leads
+                    </a>
+                  )}
                 </div>
               )}
             </div>
