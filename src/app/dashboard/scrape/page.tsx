@@ -1,9 +1,14 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import api from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
+import {
+  WOCCO_SERVICE_GROUPS,
+  WOCCO_SERVICES,
+  findWoccoService,
+} from "@/lib/wocco-services";
 
 type ScrapeStatus = "READY" | "RUNNING" | "SUCCEEDED" | "FAILED" | "TIMED-OUT" | "ABORTED";
 
@@ -38,6 +43,8 @@ export default function ScrapePage() {
   const router = useRouter();
   const [target, setTarget] = useState<"business" | "individual">("business");
   const [source, setSource] = useState("google");
+  const [serviceId, setServiceId] = useState("");
+  const [serviceFilter, setServiceFilter] = useState("");
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
   const [maxResults, setMaxResults] = useState(50);
@@ -70,6 +77,33 @@ export default function ScrapePage() {
       setMaxResults(50);
     }
   }
+
+  function applyService(id: string) {
+    setServiceId(id);
+    const svc = findWoccoService(id);
+    if (svc) setQuery(svc.search);
+  }
+
+  const filteredGroups = useMemo(() => {
+    const q = serviceFilter.trim().toLowerCase();
+    if (!q) return WOCCO_SERVICE_GROUPS;
+    return WOCCO_SERVICE_GROUPS.map((g) => ({
+      ...g,
+      services: g.services.filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) ||
+          s.search.toLowerCase().includes(q),
+      ),
+    })).filter((g) => g.services.length > 0);
+  }, [serviceFilter]);
+
+  const selectedService = serviceId ? findWoccoService(serviceId) : undefined;
+  // Keep select value valid when filter hides the current option
+  const selectValue =
+    selectedService &&
+    filteredGroups.some((g) => g.services.some((s) => s.id === serviceId))
+      ? serviceId
+      : "";
 
   function startPolling(runId: string) {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -197,6 +231,35 @@ export default function ScrapePage() {
               ))}
             </div>
 
+            <div style={{ marginBottom: "16px" }}>
+              <label style={labelStyle}>Service</label>
+              <input
+                value={serviceFilter}
+                onChange={(e) => setServiceFilter(e.target.value)}
+                placeholder={`Filter ${WOCCO_SERVICES.length} services…`}
+                style={{ ...inputStyle, marginBottom: "8px" }}
+              />
+              <select
+                value={selectValue}
+                onChange={(e) => applyService(e.target.value)}
+                style={inputStyle}
+              >
+                <option value="">Select a WOCCO service…</option>
+                {filteredGroups.map((g) => (
+                  <optgroup key={g.group} label={g.label}>
+                    {g.services.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <p style={{ color: "#6b7280", fontSize: "11px", margin: "8px 0 0", lineHeight: 1.45 }}>
+                Individuals → People Finder · Businesses → Google Maps · Craigslist optional
+              </p>
+            </div>
+
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
               <div>
                 <label style={labelStyle}>Source</label>
@@ -241,13 +304,19 @@ export default function ScrapePage() {
               </label>
               <input
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  // Clear service selection if user edits away from catalog search string
+                  if (selectedService && e.target.value !== selectedService.search) {
+                    setServiceId("");
+                  }
+                }}
                 placeholder={
                   source === "people"
-                    ? 'e.g. "real estate agent" or "property manager"'
+                    ? 'e.g. "House Cleaner" or "Plumber"'
                     : target === "individual"
-                      ? 'e.g. "lawn mower" or "furniture"'
-                      : 'e.g. "roofing contractors"'
+                      ? 'e.g. "House Cleaner" or "Junk Removal"'
+                      : 'e.g. "House Cleaning" or "HVAC Technician"'
                 }
                 required
                 style={inputStyle}
@@ -257,7 +326,7 @@ export default function ScrapePage() {
             <div style={{ marginBottom: "8px" }}>
               <label style={labelStyle}>
                 {source === "craigslist"
-                  ? "City (Craigslist site, e.g. dallas — states auto-map)"
+                  ? "City subdomain (e.g. dallas, honolulu — not a state name)"
                   : source === "people"
                     ? "Location (city, or state like texas)"
                     : "Location (required)"}
@@ -267,7 +336,7 @@ export default function ScrapePage() {
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder={
                   source === "craigslist"
-                    ? "dallas (city site — not a state name)"
+                    ? "dallas or honolulu (city site — not Hawaii / Texas)"
                     : source === "people"
                       ? 'e.g. "Dallas" or "texas" or "texas, us"'
                       : "e.g. Dallas, TX, USA"
@@ -279,15 +348,15 @@ export default function ScrapePage() {
 
             <p style={{ color: "#4b5563", fontSize: "11px", margin: "0 0 20px", lineHeight: 1.5 }}>
               {source === "people" &&
-                "Uses Apify People Finder (~$1.50 / 1,000). Use a real job title (not “homeowner”). State names like “texas” map to texas, us; city names like “dallas” use city filter."}
+                "Uses Apify People Finder (~$1.50 / 1,000). Job title = selected service (not “homeowner”). State names like “texas” map to texas, us; city names like “dallas” use city filter."}
               {source === "google" &&
                 "Uses Google Maps business listings — business name, phone, full address, category, and website when available."}
               {source === "craigslist" &&
                 target === "individual" &&
-                "Owner listings: goods → for-sale, service queries (trash, cleaning, plumbing…) → services. City subdomain required (dallas, miami); states auto-map."}
+                "Owner listings: goods → for-sale, service queries (trash, cleaning, plumbing…) → services. Use a city subdomain (dallas, honolulu), not a state name like Hawaii."}
               {source === "craigslist" &&
                 target === "business" &&
-                "Uses your rented Craigslist actor on services listings. Use a city subdomain (e.g. dallas), not a state name."}
+                "Uses your rented Craigslist actor on services listings. Use a city subdomain (e.g. dallas, honolulu), not a state name."}
             </p>
 
             <button
