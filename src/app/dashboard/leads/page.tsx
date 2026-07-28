@@ -168,7 +168,16 @@ function LeadsPageInner() {
   const [categories, setCategories] = useState<string[]>([]);
   const [batches, setBatches] = useState<ImportBatch[]>([]);
   const [searchInput, setSearchInput] = useState(urlSearch);
+  const [isNarrow, setIsNarrow] = useState(false);
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 720px)");
+    const update = () => setIsNarrow(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   const setParams = useCallback(
     (updates: Record<string, string | null>, resetPage = true) => {
@@ -282,11 +291,13 @@ function LeadsPageInner() {
         style={{
           background: "#111827",
           borderBottom: "1px solid #1f2937",
-          padding: "16px 24px",
+          padding: isNarrow ? "14px 16px" : "16px 24px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          gap: "12px",
           flexShrink: 0,
+          flexWrap: "wrap",
         }}
       >
         <div>
@@ -396,13 +407,14 @@ function LeadsPageInner() {
 
       <div
         style={{
-          padding: "16px 24px",
+          padding: isNarrow ? "12px 16px" : "16px 24px",
           background: "#0f172a",
           borderBottom: "1px solid #1f2937",
           display: "flex",
           gap: "12px",
           flexWrap: "wrap",
           alignItems: "center",
+          minWidth: 0,
         }}
       >
         <div style={{ display: "flex", gap: "6px" }}>
@@ -535,7 +547,7 @@ function LeadsPageInner() {
         </button>
       </div>
 
-      <main style={{ flex: 1, overflow: "auto", padding: "24px" }}>
+      <main style={{ flex: 1, overflow: "auto", padding: isNarrow ? "16px" : "24px", minWidth: 0 }}>
         {error ? (
           <div
             style={{
@@ -593,11 +605,14 @@ function LeadsPageInner() {
                       background: "#111827",
                       border: `1px solid ${isPerson ? "rgba(168,85,247,0.35)" : "rgba(96,165,250,0.28)"}`,
                       borderRadius: "14px",
-                      padding: "14px 16px",
+                      padding: isNarrow ? "12px" : "14px 16px",
                       display: "grid",
-                      gridTemplateColumns: "56px minmax(0, 1.5fr) minmax(160px, 1fr) auto",
-                      gap: "16px",
-                      alignItems: "center",
+                      gridTemplateColumns: isNarrow
+                        ? "56px minmax(0, 1fr)"
+                        : "56px minmax(0, 1.5fr) minmax(160px, 1fr) auto",
+                      gap: isNarrow ? "12px" : "16px",
+                      alignItems: isNarrow ? "start" : "center",
+                      minWidth: 0,
                     }}
                   >
                     <LeadAvatar
@@ -606,7 +621,7 @@ function LeadsPageInner() {
                     />
 
                     <div
-                      style={{ cursor: "pointer", minWidth: 0 }}
+                      style={{ cursor: "pointer", minWidth: 0, gridColumn: isNarrow ? "2" : undefined }}
                       onClick={() => router.push("/dashboard/leads/" + lead.id)}
                     >
                       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4, flexWrap: "wrap" }}>
@@ -659,12 +674,32 @@ function LeadsPageInner() {
                       </p>
                     </div>
 
-                    <div>
+                    <div
+                      style={{
+                        gridColumn: isNarrow ? "1 / -1" : undefined,
+                        minWidth: 0,
+                      }}
+                    >
                       <p style={{ color: "#6b7280", fontSize: 11, margin: "0 0 4px" }}>Contact</p>
-                      <p style={{ color: phone ? "#34d399" : "#4b5563", fontSize: 13, margin: 0, fontWeight: 600 }}>
+                      <p
+                        style={{
+                          color: phone ? "#34d399" : "#4b5563",
+                          fontSize: 13,
+                          margin: 0,
+                          fontWeight: 600,
+                          wordBreak: "break-word",
+                        }}
+                      >
                         {phone || "No phone"}
                       </p>
-                      <p style={{ color: email ? "#60a5fa" : "#4b5563", fontSize: 12, margin: "4px 0 0" }}>
+                      <p
+                        style={{
+                          color: email ? "#60a5fa" : "#4b5563",
+                          fontSize: 12,
+                          margin: "4px 0 0",
+                          wordBreak: "break-word",
+                        }}
+                      >
                         {email || "No email"}
                       </p>
                       {showCraigslistReply && (
@@ -691,7 +726,16 @@ function LeadsPageInner() {
                       )}
                     </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: isNarrow ? "row" : "column",
+                        gap: 8,
+                        alignItems: isNarrow ? "center" : "flex-end",
+                        justifyContent: isNarrow ? "space-between" : undefined,
+                        gridColumn: isNarrow ? "1 / -1" : undefined,
+                      }}
+                    >
                       <span
                         style={{
                           background: statusColors[lead.status]?.bg || "#1f2937",
@@ -716,6 +760,7 @@ function LeadsPageInner() {
                           fontSize: 11,
                           outline: "none",
                           cursor: "pointer",
+                          maxWidth: "100%",
                         }}
                       >
                         <option value="new">New</option>

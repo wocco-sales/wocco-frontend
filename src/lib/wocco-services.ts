@@ -1,7 +1,8 @@
 /**
- * Curated WOCCO service catalog for Greymoon scrape search.
- * Names are written as searchable job titles / Google Maps queries.
- * Groups mirror flyer themes: NOW (everyday home) vs PRO (skilled trades / commercial).
+ * Curated service catalog for Greymoon scrape search.
+ * `name` = friendly display / serviceCategory on import.
+ * `search` = People Finder job title / Google Maps / Craigslist query.
+ * Groups: NOW (everyday home) vs PRO (skilled trades / commercial).
  */
 
 export type WoccoServiceGroup = "NOW" | "PRO";
@@ -15,7 +16,7 @@ export interface WoccoService {
 }
 
 export const WOCCO_SERVICES: WoccoService[] = [
-  // ── WOCCO NOW — everyday home & property services ──────────────────────────
+  // ── NOW — everyday home & property services ────────────────────────────────
   { id: "house-cleaning", name: "House Cleaning", search: "House Cleaner", group: "NOW" },
   { id: "deep-cleaning", name: "Deep Cleaning", search: "Deep Cleaner", group: "NOW" },
   { id: "move-in-out-cleaning", name: "Move-In / Move-Out Cleaning", search: "Move Out Cleaner", group: "NOW" },
@@ -24,8 +25,9 @@ export const WOCCO_SERVICES: WoccoService[] = [
   { id: "upholstery-cleaning", name: "Upholstery Cleaning", search: "Upholstery Cleaner", group: "NOW" },
   { id: "window-cleaning", name: "Window Cleaning", search: "Window Cleaner", group: "NOW" },
   { id: "pressure-washing", name: "Pressure Washing", search: "Pressure Washing", group: "NOW" },
-  { id: "junk-removal", name: "Junk Removal", search: "Junk Removal", group: "NOW" },
-  { id: "trash-removal", name: "Trash Removal", search: "Trash Removal", group: "NOW" },
+  // People Finder is job-title based — marketing phrases like "Trash Removal" return 0
+  { id: "junk-removal", name: "Junk Removal", search: "Junk Remover", group: "NOW" },
+  { id: "trash-removal", name: "Trash Removal", search: "Junk Remover", group: "NOW" },
   { id: "furniture-moving", name: "Furniture Moving", search: "Mover", group: "NOW" },
   { id: "packing", name: "Packing Services", search: "Packer", group: "NOW" },
   { id: "furniture-assembly", name: "Furniture Assembly", search: "Furniture Assembler", group: "NOW" },
@@ -47,7 +49,7 @@ export const WOCCO_SERVICES: WoccoService[] = [
   { id: "laundry", name: "Laundry Services", search: "Laundry Service", group: "NOW" },
   { id: "pool-cleaning", name: "Pool Cleaning", search: "Pool Cleaner", group: "NOW" },
 
-  // ── WOCCO PRO — skilled trades & commercial ────────────────────────────────
+  // ── PRO — skilled trades & commercial ──────────────────────────────────────
   { id: "plumber", name: "Plumbing", search: "Plumber", group: "PRO" },
   { id: "toilet-repair", name: "Toilet Repair", search: "Toilet Repair", group: "PRO" },
   { id: "drain-cleaning", name: "Drain Cleaning", search: "Drain Cleaning", group: "PRO" },
@@ -89,12 +91,12 @@ export const WOCCO_SERVICE_GROUPS: {
 }[] = [
   {
     group: "NOW",
-    label: "WOCCO NOW",
+    label: "Everyday home",
     services: WOCCO_SERVICES.filter((s) => s.group === "NOW"),
   },
   {
     group: "PRO",
-    label: "WOCCO PRO",
+    label: "Skilled trades",
     services: WOCCO_SERVICES.filter((s) => s.group === "PRO"),
   },
 ];

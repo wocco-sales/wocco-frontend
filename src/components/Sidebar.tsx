@@ -20,10 +20,28 @@ const ADMIN_LINKS = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
+  const [isNarrow, setIsNarrow] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     setUser(getUser());
   }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const update = () => {
+      setIsNarrow(mq.matches);
+      if (!mq.matches) setOpen(false);
+    };
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  // Close drawer on navigation
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";
   const links = isAdmin ? [...BASE_LINKS, ...ADMIN_LINKS] : BASE_LINKS;
@@ -33,18 +51,19 @@ export default function Sidebar() {
     return pathname === href || pathname.startsWith(href + "/");
   }
 
-  return (
-    <aside style={{ width: "240px", background: "#111827", borderRight: "1px solid #1f2937", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+  const nav = (
+    <>
       <div style={{ padding: "20px 24px", borderBottom: "1px solid #1f2937" }}>
         <Logo size={36} showText subtitle="Sales Lead Platform" />
       </div>
 
-      <nav style={{ flex: 1, padding: "16px" }}>
+      <nav style={{ flex: 1, padding: "16px", overflowY: "auto" }}>
         {links.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             prefetch
+            onClick={() => setOpen(false)}
             style={{
               display: "flex",
               alignItems: "center",
@@ -81,6 +100,85 @@ export default function Sidebar() {
           Sign out
         </button>
       </div>
+    </>
+  );
+
+  if (isNarrow) {
+    return (
+      <>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px",
+            padding: "10px 14px",
+            background: "#111827",
+            borderBottom: "1px solid #1f2937",
+            flexShrink: 0,
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        >
+          <Logo size={28} showText subtitle="Sales Lead Platform" />
+          <button
+            type="button"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+            style={{
+              background: "#1f2937",
+              border: "1px solid #374151",
+              color: "white",
+              borderRadius: "8px",
+              padding: "8px 12px",
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            {open ? "Close" : "Menu"}
+          </button>
+        </div>
+
+        {open && (
+          <>
+            <div
+              onClick={() => setOpen(false)}
+              style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(0,0,0,0.55)",
+                zIndex: 40,
+              }}
+            />
+            <aside
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: "min(280px, 86vw)",
+                background: "#111827",
+                borderRight: "1px solid #1f2937",
+                display: "flex",
+                flexDirection: "column",
+                zIndex: 50,
+                boxShadow: "8px 0 24px rgba(0,0,0,0.35)",
+              }}
+            >
+              {nav}
+            </aside>
+          </>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <aside style={{ width: "240px", background: "#111827", borderRight: "1px solid #1f2937", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+      {nav}
     </aside>
   );
 }
