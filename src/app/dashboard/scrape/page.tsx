@@ -18,6 +18,7 @@ interface ImportResult {
   imported: number;
   scraped: number;
   skipped: number;
+  skippedDuplicates?: number;
   skippedNoContact?: number;
   skippedJunk?: number;
   batchId?: string;
@@ -283,7 +284,7 @@ export default function ScrapePage() {
                 "Uses Google Maps business listings — business name, phone, full address, category, and website when available."}
               {source === "craigslist" &&
                 target === "individual" &&
-                "Uses your rented Craigslist actor on owner-posted listings. Location must be a Craigslist city (dallas, miami). State names auto-map to a major city."}
+                "Owner listings: goods → for-sale, service queries (trash, cleaning, plumbing…) → services. City subdomain required (dallas, miami); states auto-map."}
               {source === "craigslist" &&
                 target === "business" &&
                 "Uses your rented Craigslist actor on services listings. Use a city subdomain (e.g. dallas), not a state name."}
@@ -407,9 +408,10 @@ export default function ScrapePage() {
                       `Imported ${importResult.imported} new lead${importResult.imported === 1 ? "" : "s"}`}
                   </p>
                   <p style={{ color: "#6b7280", fontSize: "12px", margin: "0 0 12px" }}>
-                    {importResult.scraped} scraped, {importResult.skipped} skipped as duplicates
+                    {importResult.scraped} scraped
+                    {`, ${importResult.skippedDuplicates ?? importResult.skipped} skipped as duplicates`}
                     {importResult.skippedJunk
-                      ? `, ${importResult.skippedJunk} filtered (status/error/junk)`
+                      ? `, ${importResult.skippedJunk} junk skipped`
                       : ""}
                     {importResult.skippedNoContact
                       ? `, ${importResult.skippedNoContact} skipped (no email or phone)`
