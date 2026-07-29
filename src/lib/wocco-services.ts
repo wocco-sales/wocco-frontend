@@ -13,6 +13,11 @@ export interface WoccoService {
   /** String used as People Finder job title / Google Maps / Craigslist query */
   search: string;
   group: WoccoServiceGroup;
+  /**
+   * Extra People Finder titles sent with `search` for sparse B2B trades.
+   * Backend also expands junk/trash queries; this is for UI copy.
+   */
+  peopleTitleHint?: string;
 }
 
 export const WOCCO_SERVICES: WoccoService[] = [
@@ -25,9 +30,23 @@ export const WOCCO_SERVICES: WoccoService[] = [
   { id: "upholstery-cleaning", name: "Upholstery Cleaning", search: "Upholstery Cleaner", group: "NOW" },
   { id: "window-cleaning", name: "Window Cleaning", search: "Window Cleaner", group: "NOW" },
   { id: "pressure-washing", name: "Pressure Washing", search: "Pressure Washing", group: "NOW" },
-  // People Finder is job-title based — marketing phrases like "Trash Removal" return 0
-  { id: "junk-removal", name: "Junk Removal", search: "Junk Remover", group: "NOW" },
-  { id: "trash-removal", name: "Trash Removal", search: "Junk Remover", group: "NOW" },
+  // People Finder expands junk/trash into related titles (Hauler, Waste Collector, …)
+  {
+    id: "junk-removal",
+    name: "Junk Removal",
+    search: "Junk Remover",
+    group: "NOW",
+    peopleTitleHint:
+      "Searches Junk Remover, Junk Removal Specialist, Hauler, Waste Collector, Sanitation Worker, and related titles",
+  },
+  {
+    id: "trash-removal",
+    name: "Trash Removal",
+    search: "Junk Remover",
+    group: "NOW",
+    peopleTitleHint:
+      "Searches Junk Remover, Junk Removal Specialist, Hauler, Waste Collector, Sanitation Worker, and related titles",
+  },
   { id: "furniture-moving", name: "Furniture Moving", search: "Mover", group: "NOW" },
   { id: "packing", name: "Packing Services", search: "Packer", group: "NOW" },
   { id: "furniture-assembly", name: "Furniture Assembly", search: "Furniture Assembler", group: "NOW" },

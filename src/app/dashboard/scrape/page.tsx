@@ -88,7 +88,7 @@ export default function ScrapePage() {
     setTarget(next);
     const nextSource = next === "individual" ? "people" : "google";
     setSource(nextSource);
-    setMaxResults(next === "individual" ? 25 : 50);
+    setMaxResults(50);
     if (serviceId) {
       const svc = findWoccoService(serviceId);
       if (svc) setQuery(queryForService(svc, nextSource));
@@ -103,7 +103,7 @@ export default function ScrapePage() {
 
   function applySource(next: string) {
     setSource(next);
-    setMaxResults(next === "craigslist" ? 20 : next === "people" ? 25 : 50);
+    setMaxResults(next === "craigslist" ? 20 : 50);
     if (serviceId) {
       const svc = findWoccoService(serviceId);
       if (svc) setQuery(queryForService(svc, next));
@@ -356,6 +356,11 @@ export default function ScrapePage() {
                   onChange={(e) => setMaxResults(parseInt(e.target.value) || 50)}
                   style={inputStyle}
                 />
+                {source === "people" && (
+                  <p style={{ color: "#6b7280", fontSize: "11px", margin: "8px 0 0", lineHeight: 1.45 }}>
+                    Sparse trades (junk/trash): try 50–100. Cap is 100 per run.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -387,7 +392,9 @@ export default function ScrapePage() {
               />
               {source === "people" && (
                 <p style={{ color: "#6b7280", fontSize: "11px", margin: "8px 0 0", lineHeight: 1.45 }}>
-                  People Finder needs job titles (e.g. Junk Remover), not company marketing phrases like “Trash Removal”.
+                  {selectedService?.peopleTitleHint
+                    ? selectedService.peopleTitleHint
+                    : "People Finder needs job titles (e.g. House Cleaner), not company marketing phrases like “Trash Removal”."}
                 </p>
               )}
             </div>
@@ -417,7 +424,7 @@ export default function ScrapePage() {
 
             <p style={{ color: "#4b5563", fontSize: "11px", margin: "0 0 20px", lineHeight: 1.5 }}>
               {source === "people" &&
-                "Uses Apify People Finder (~$1.50 / 1,000). Job title = selected service search (not “homeowner”). State names like “texas” map to texas, us; city names like “dallas” use city filter."}
+                "Uses Apify People Finder (~$1.50 / 1,000). Junk/trash searches expand to related titles; email status is not limited to validated-only (import still requires phone or email). State names like “texas” map to texas, us; cities like “dallas” use city filter."}
               {source === "google" &&
                 "Uses Google Maps business listings — business name, phone, full address, category, and website when available."}
               {source === "craigslist" &&
