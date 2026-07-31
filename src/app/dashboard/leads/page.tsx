@@ -165,6 +165,8 @@ function LeadsPageInner() {
   const [counts, setCounts] = useState({ all: 0, individuals: 0, businesses: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [batches, setBatches] = useState<ImportBatch[]>([]);
   const [searchInput, setSearchInput] = useState(urlSearch);
@@ -285,6 +287,85 @@ function LeadsPageInner() {
     }
   }
 
+  function currentFilterParams() {
+    const params: Record<string, string> = {};
+    if (statusFilter) params.status = statusFilter;
+    if (sourceFilter) params.source = sourceFilter;
+    if (typeFilter) params.leadType = typeFilter;
+    if (batchFilter) params.batch = batchFilter;
+    if (categoryFilter) params.serviceCategory = categoryFilter;
+    if (hasContact) params.hasContact = "1";
+    if (newToday) params.newToday = "1";
+    if (urlSearch) params.search = urlSearch;
+    return params;
+  }
+
+  async function handleExport() {
+    try {
+      setExporting(true);
+      setExportError("");
+      const res = await api.get("/leads/export", {
+        params: currentFilterParams(),
+        responseType: "blob",
+        timeout: 120000,
+      });
+
+      const contentType = String(res.headers["content-type"] || "");
+      if (contentType.includes("application/json")) {
+        const text = await (res.data as Blob).text();
+        let message = "Export failed";
+        try {
+          const parsed = JSON.parse(text);
+          if (typeof parsed?.message === "string") message = parsed.message;
+          else if (Array.isArray(parsed?.message)) message = parsed.message.join(", ");
+        } catch {
+          /* keep fallback */
+        }
+        setExportError(message);
+        return;
+      }
+
+      const today = new Date().toISOString().slice(0, 10);
+      const blob = new Blob([res.data], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `greymoon-leads-${today}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      console.error(err);
+      // Axios blob errors often return JSON as a Blob
+      if (
+        err &&
+        typeof err === "object" &&
+        "response" in err &&
+        (err as { response?: { data?: Blob } }).response?.data instanceof Blob
+      ) {
+        try {
+          const text = await (err as { response: { data: Blob } }).response.data.text();
+          const parsed = JSON.parse(text);
+          const message = parsed?.message;
+          if (typeof message === "string") {
+            setExportError(message);
+            return;
+          }
+          if (Array.isArray(message)) {
+            setExportError(message.filter((m) => typeof m === "string").join(", ") || "Export failed");
+            return;
+          }
+        } catch {
+          /* fall through */
+        }
+      }
+      setExportError(getErrorMessage(err, "Export failed. Check your connection and try again."));
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <>
       <header
@@ -300,27 +381,60 @@ function LeadsPageInner() {
           flexWrap: "wrap",
         }}
       >
-        <div>
+        <div style={{ minWidth: 0, flex: "1 1 auto" }}>
           <h2 style={{ color: "white", fontWeight: "600", fontSize: "15px", margin: 0 }}>Leads</h2>
           <p style={{ color: "#6b7280", fontSize: "11px", margin: "2px 0 0" }}>
             {counts.all} leads · {counts.individuals} individuals · {counts.businesses} businesses
           </p>
+          {exportError && (
+            <p style={{ color: "#f87171", fontSize: "11px", margin: "6px 0 0", maxWidth: 480 }}>
+              {exportError}
+            </p>
+          )}
         </div>
-        <button
-          onClick={() => router.push("/dashboard/leads/import")}
+        <div
           style={{
-            background: "#2563eb",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            padding: "8px 16px",
-            fontSize: "12px",
-            fontWeight: "600",
-            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            flexWrap: "wrap",
+            flexShrink: 0,
           }}
         >
-          + Import CSV
-        </button>
+          <button
+            onClick={handleExport}
+            disabled={exporting || loading}
+            style={{
+              background: "#1f2937",
+              color: exporting || loading ? "#6b7280" : "white",
+              border: "1px solid #374151",
+              borderRadius: "8px",
+              padding: "8px 16px",
+              fontSize: "12px",
+              fontWeight: "600",
+              cursor: exporting || loading ? "not-allowed" : "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {exporting ? "Exporting…" : "Export CSV"}
+          </button>
+          <button
+            onClick={() => router.push("/dashboard/leads/import")}
+            style={{
+              background: "#2563eb",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              padding: "8px 16px",
+              fontSize: "12px",
+              fontWeight: "600",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            + Import CSV
+          </button>
+        </div>
       </header>
 
       {batchFilter && (
