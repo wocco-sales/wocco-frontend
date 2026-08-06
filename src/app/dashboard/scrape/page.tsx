@@ -26,6 +26,7 @@ interface ImportResult {
   skippedDuplicates?: number;
   skippedNoContact?: number;
   skippedJunk?: number;
+  skippedIrrelevant?: number;
   batchId?: string;
   message?: string;
 }
@@ -43,8 +44,12 @@ function queryForService(
   svc: { name: string; search: string },
   source: string,
 ) {
-  // People Finder is job-title based; Maps / Craigslist prefer service phrases
-  return source === "people" ? svc.search : svc.name;
+  // People Finder is job-title based; Maps gets "… service" for sharper Places results
+  if (source === "people") return svc.search;
+  if (source === "google") {
+    return /\bservice(s)?\b/i.test(svc.name) ? svc.name : `${svc.name} service`;
+  }
+  return svc.name;
 }
 
 export default function ScrapePage() {
@@ -426,13 +431,13 @@ export default function ScrapePage() {
               {source === "people" &&
                 "Uses Apify People Finder (~$1.50 / 1,000). Junk/trash searches expand to related titles; email status is not limited to validated-only (import still requires phone or email). State names like “texas” map to texas, us; cities like “dallas” use city filter."}
               {source === "google" &&
-                "Uses Google Maps business listings — business name, phone, full address, category, and website when available."}
+                "Uses Google Maps business listings. Off-topic places (churches, hotels, wrong trades) are filtered on import so only businesses matching the selected service are kept."}
               {source === "craigslist" &&
                 target === "individual" &&
                 "Owner listings: goods → for-sale, service queries (trash, cleaning, plumbing…) → services. Use a city subdomain (dallas, honolulu), not a state name like Hawaii. Only listings with phone or email are imported."}
               {source === "craigslist" &&
                 target === "business" &&
-                "Uses your rented Craigslist actor on services listings. Use a city subdomain (e.g. dallas, honolulu), not a state name. Only listings with phone or email are imported."}
+                "Uses your rented Craigslist actor on services listings. Use a city subdomain (e.g. dallas, honolulu), not a state name. Only listings with phone or email that match the selected service are imported (painters/hotels/churches filtered out)."}
             </p>
 
             <button
@@ -579,6 +584,9 @@ export default function ScrapePage() {
                       : ""}
                     {importResult.skippedNoContact
                       ? `, ${importResult.skippedNoContact} skipped (no email or phone)`
+                      : ""}
+                    {importResult.skippedIrrelevant
+                      ? `, ${importResult.skippedIrrelevant} off-topic skipped`
                       : ""}
                   </p>
                   {importResult.imported > 0 && (
